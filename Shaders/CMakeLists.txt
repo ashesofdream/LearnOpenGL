@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.0.0)
+project(Shaders)
+include_directories(../)
+add_executable(Shaders main.cpp ../util.cpp ../Shader.cpp)
+target_link_libraries(Shaders glfw glad::glad)

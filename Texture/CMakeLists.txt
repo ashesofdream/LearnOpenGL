@@ -1,0 +1,6 @@
+project(Texture)
+find_path(STB_INCLUDE_DIRS "stb_image.h")
+include_directories(${STB_INCLUDE_DIRS})
+add_executable(Texture main.cpp ../Shader.cpp ../util.cpp )
+target_include_directories(Texture PRIVATE ${STB_INCLUDE_DIRS})
+target_link_libraries(Texture glfw glad::glad glm::glm)
