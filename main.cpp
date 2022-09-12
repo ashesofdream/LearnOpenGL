@@ -44,5 +44,5 @@ int main(int, char**) {
     auto window = prepare_window();
     if (!window) return 0;
     HelloTriangle::DrawTwoTriangles(window);
-
+    if(window == nullptr)
 }
