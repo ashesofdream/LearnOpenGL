@@ -10,6 +10,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "util.h"
 #include <string>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 using namespace std;
 void checkCompileErrors(unsigned int shader, std::string type)
     {
@@ -61,6 +63,14 @@ Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path){
     glLinkProgram(program_id);
     glDeleteShader(fragment_shader);
     glDeleteShader(vertex_shader);
+
+    this->use();
+    shader_macro.assign({GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,GL_TEXTURE4,GL_TEXTURE5,GL_TEXTURE6,GL_TEXTURE7,GL_TEXTURE8,GL_TEXTURE9,GL_TEXTURE10,
+                         GL_TEXTURE11,GL_TEXTURE12,GL_TEXTURE13,GL_TEXTURE14,GL_TEXTURE15});
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 void Shader::use(){
@@ -95,4 +105,33 @@ bool Shader::set_float(const char *vari_name, const float& f) {
         return false;
     }
     return true;
+}
+
+bool Shader::set_int(const char *vari_name, const int &i) {
+    try {
+        glUniform1i(glGetUniformLocation(this->program_id,vari_name),i);
+    } catch (std::exception e) {
+        std::cout << e.what() << std::endl;
+        return false;
+    }
+    return true;
+}
+
+unsigned int Shader::set_texture(const char *path, const char *sampler_name,unsigned int gl_texture_type) {
+    this->use();
+
+    int width,height,channels;
+    auto texture_data = stbi_load(path,&width,&height,&channels,0);
+    if(texture_data == nullptr) return -1;
+    unsigned int texture_id = 0;
+    glActiveTexture(shader_macro[cur_texture_index]);
+    glGenTextures(1,&texture_id);
+    glBindTexture(gl_texture_type,texture_id);
+    int image_format = 0;
+    if(channels == 3) image_format = GL_RGB;
+    else if(channels == 4) image_format = GL_RGBA;
+    else if(channels == 1) image_format = GL_ALPHA;
+    glTexImage2D(GL_TEXTURE_2D,0,image_format,width,height,0,image_format,GL_UNSIGNED_BYTE,texture_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    return texture_id;
 }

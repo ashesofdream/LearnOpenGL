@@ -3,3 +3,5 @@ build
 .vs
 out
 cmake-build-debug-mingw-clang
+cmake-build-debug
+.name

@@ -1,5 +1,6 @@
 #include <string>
 #include <glm/glm.hpp>
+#include <vector>
 class Shader{
     public:
     Shader(const char* vertex_shader_path,const char* fragment_shader_path);
@@ -8,4 +9,9 @@ class Shader{
     bool set_vec3(const char* vari_name,const glm::vec3 &v);
     bool set_mat4(const char* vari_name,const glm::mat4 &mat);
     bool set_float(const char* vari_name,const float &f);
+    bool set_int(const char* vari_name,const int &i);
+    unsigned int Shader::set_texture(const char *path, const char *sampler_name,unsigned int gl_texture_type=0x0DE1);//default texture type is GL_TEXTURE_2D
+private:
+    std::vector<unsigned int> shader_macro;
+    int cur_texture_index = 0;
 };
