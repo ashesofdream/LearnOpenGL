@@ -134,3 +134,19 @@ unsigned int Shader::set_texture(const char *path, const char *sampler_name,unsi
     glGenerateMipmap(GL_TEXTURE_2D);
     return texture_id;
 }
+
+bool Shader::set_arrays_vec3(int array_len,const char* array_name,const char* attrib_name,const glm::vec3& v){
+    string tmp_s(array_name);
+    for(int i = 0; i < array_len; ++i){
+        set_vec3((tmp_s+'['+ to_string(i)+"]."+attrib_name).c_str(),v);
+    }
+    return true;
+}
+bool Shader::set_arrays_float(int array_len,const char* array_name,const char* attrib_name,const float f){
+    string tmp_s(array_name);
+    for(int i = 0; i < array_len; ++i){
+        set_float((tmp_s+'['+ to_string(i)+"]."+attrib_name).c_str(),f);
+    }
+    return true;
+}
+

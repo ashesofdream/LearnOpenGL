@@ -19,9 +19,14 @@ using namespace std;
 
 int main(){
     auto window = util::prepare_window();
-    Shader s("D://Code/graphic/LearnOpenGL/lighting-light_caster/vertex.vs.glsl",
-    "D://Code/graphic/LearnOpenGL/lighting-light_caster/fragment.fs.glsl");
-    
+    Shader s("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/vertex.vs.glsl",
+    "D://Code/graphic/LearnOpenGL/lighting-multiple_lights/fragment.fs.glsl");
+    glm::vec3 pointLightPositions[] = {
+            glm::vec3( 0.7f,  0.2f,  2.0f),
+            glm::vec3( 2.3f, -3.3f, -4.0f),
+            glm::vec3(-4.0f,  2.0f, -12.0f),
+            glm::vec3( 0.0f,  0.0f, -3.0f)
+    };
 
     unsigned int VAO,VBO;
     glGenVertexArrays(1,&VAO);
@@ -70,7 +75,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
     int text1_width,text1_height,channels_num;
-    unsigned char* text1_data = stbi_load("D://Code/graphic/LearnOpenGL/lighting-light_caster/container2.png",&text1_width,&text1_height,&channels_num,0);
+    unsigned char* text1_data = stbi_load("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/container2.png",&text1_width,&text1_height,&channels_num,0);
     if(text1_data == nullptr){
         std::cout<<"load image fail"<<endl;
         return 0;
@@ -85,7 +90,7 @@ int main(){
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D,specular_text);
     int  specular_text_width,specular_text_height,specular_text_channel;
-    auto specular_data =  stbi_load("D://Code/graphic/LearnOpenGL/lighting-light_caster/container2_specular.png",&specular_text_width,&specular_text_height,&specular_text_channel,0);
+    auto specular_data =  stbi_load("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/container2_specular.png",&specular_text_width,&specular_text_height,&specular_text_channel,0);
     if(specular_data == nullptr){
         cout<<"load specular texture failed"<<endl;
         return 0;
@@ -94,11 +99,19 @@ int main(){
     stbi_image_free(specular_data);
     glGenerateMipmap(GL_TEXTURE_2D);
     s.set_int("material.specular",1);
-    s.set_float("light.constant",1.0f);
-    s.set_float("light.linear",0.09f);
-    s.set_float("light.quadratic",0.032f);
-
-
+    s.set_float("spotLight.constant",1.0f);
+    s.set_float("spotLight.linear",0.09f);
+    s.set_float("spotLight.quadratic",0.032f);
+    int point_light_num = 4;
+    s.set_arrays_vec3(point_light_num,"pointLights","ambient", {0.05f, 0.05f, 0.05f});
+    s.set_arrays_vec3(point_light_num,"pointLights","diffuse",{0.8f, 0.8f, 0.8f});
+    s.set_arrays_vec3(point_light_num,"pointLights","specular",{1.f,1.f,1.f});
+    s.set_arrays_float(point_light_num,"pointLights","constant",1.f);
+    s.set_arrays_float(point_light_num,"pointLights","linear",0.09f);
+    s.set_arrays_float(point_light_num,"pointLights","quadratic",0.032f);
+    for(int i = 0 ; i < point_light_num; ++i){
+        s.set_vec3(("pointLights["s+ to_string(i)+"].position").c_str(),pointLightPositions[i]);
+    }
 
     unsigned int light_VAO;
     glGenVertexArrays(1, &light_VAO);
@@ -109,8 +122,8 @@ int main(){
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(sizeof(float)*3));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    Shader light_source_shader("D://Code/graphic/LearnOpenGL/lighting-light_caster/vertex.vs.glsl",
-    "D://Code/graphic/LearnOpenGL/lighting-light_caster/light_source.fs.glsl");
+    Shader light_source_shader("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/vertex.vs.glsl",
+    "D://Code/graphic/LearnOpenGL/lighting-multiple_lights/light_source.fs.glsl");
     light_source_shader.use();
     light_source_shader.set_mat4("projection",projection_matrix);
     light_source_shader.set_mat4("model", glm::scale(glm::translate(glm::mat4 (1.0f), light_pos),glm::vec3(0.2f)) );
@@ -131,13 +144,14 @@ int main(){
         s.set_vec3("light_pos",light_pos);
         s.set_vec3("view_pos", eye_pos);
 
-        s.set_vec3("light.ambient", {0.2f, 0.2f, 0.2f}); //less effect
-        s.set_vec3("light.diffuse", {0.5f, 0.5f, 0.5f}); //more effect 将光照调暗了一些以搭配场景
-        s.set_vec3("light.specular", {1.0f, 1.0f, 1.0f});
-        s.set_vec3("light.spot_dir",camera_front);
-        s.set_float("light.cos_inner_cut_off",glm::cos(glm::radians(12.5f)));
-        s.set_float("light.cos_outer_cut_off",glm::cos(glm::radians(17.5f)));
-        s.set_vec3("light.position",eye_pos);
+        s.set_vec3("spotLight.ambient", {0.2f, 0.2f, 0.2f}); //less effect
+        s.set_vec3("spotLight.diffuse", {0.5f, 0.5f, 0.5f}); //more effect 将光照调暗了一些以搭配场景
+        s.set_vec3("spotLight.specular", {1.0f, 1.0f, 1.0f});
+        s.set_vec3("spotLight.spot_dir",camera_front);
+        s.set_float("spotLight.cos_inner_cut_off",glm::cos(glm::radians(12.5f)));
+        s.set_float("spotLight.cos_outer_cut_off",glm::cos(glm::radians(17.5f)));
+        s.set_vec3("spotLight.position",eye_pos);
+
         light_source_shader.use();
         light_source_shader.set_mat4("view",view_matrix);
 
@@ -154,7 +168,12 @@ int main(){
 
         light_source_shader.use();
         glBindVertexArray(light_VAO);
-        glDrawArrays(GL_TRIANGLES,0,36);
+        for(int i = 0 ; i < 4; ++i){
+            light_source_shader.set_mat4("model",glm::translate(glm::mat4(1.f),pointLightPositions[i]));
+            glDrawArrays(GL_TRIANGLES,0,36);
+            //s.set_vec3(("pointLights["s+ to_string(i)+"].position").c_str(),pointLightPositions[i]);
+        }
+
         
         glfwSwapBuffers(window);
         glfwPollEvents();
