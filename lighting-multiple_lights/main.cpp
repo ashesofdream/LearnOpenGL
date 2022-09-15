@@ -55,7 +55,7 @@ int main(){
     
     int width = 800,height = 600;
     glm::mat4 projection_matrix = glm::perspective(45.f, static_cast<float>(width)/static_cast<float>(height), 0.1f, 100.f);
-    glEnable(GL_DEPTH_TEST);
+
     s.use();
     glUniformMatrix4fv(glGetUniformLocation(s.program_id,"projection"),1,GL_FALSE,glm::value_ptr(projection_matrix));
     s.set_vec3("light_color",{ 1.0f, 1.0f, 1.0f});
@@ -132,6 +132,7 @@ int main(){
     //light_source_shader.set_mat4("model", model_matrix);
 
     util::init_mouse(window, camera_front);
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
         glm::vec3 lightColor(1.0f,1.0f,1.0f);

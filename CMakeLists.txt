@@ -6,6 +6,8 @@ find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 include(CTest)
+
+
 #enable_testing()
 #add_subdirectory(Shaders)
 
@@ -21,4 +23,5 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 #add_subdirectory(lighting-lighting_texture)
 #add_subdirectory(lighting-light_caster)
 # target_link_libraries(main PRIVATE assimp::assimp)
-add_subdirectory(lighting-multiple_lights)
+#add_subdirectory(lighting-multiple_lights)
+add_subdirectory(model-mesh)

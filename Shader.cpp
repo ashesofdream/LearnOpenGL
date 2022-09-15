@@ -9,7 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "util.h"
 #include <string>
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 using namespace std;
 void checkCompileErrors(unsigned int shader, std::string type)
@@ -72,7 +72,7 @@ Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void Shader::use(){
+void Shader::use() const{
     glUseProgram(this->program_id);
 }
 
@@ -106,7 +106,7 @@ bool Shader::set_float(const char *vari_name, const float& f) {
     return true;
 }
 
-bool Shader::set_int(const char *vari_name, const int &i) {
+bool Shader::set_int(const char *vari_name, const int &i) const{
     try {
         glUniform1i(glGetUniformLocation(this->program_id,vari_name),i);
     } catch (std::exception e) {

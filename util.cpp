@@ -1,11 +1,15 @@
 #include "util.h"
-#include <exception>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include<glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define STBI_WINDOWS_UTF8
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
+#include <filesystem>
+#include <memory>
 using namespace std;
 GLFWwindow* util::prepare_window() {
     glfwInit();
@@ -106,4 +110,32 @@ void util::init_mouse(GLFWwindow* window,glm::vec3& camera_front,float yaw_, flo
 void util::debug(const char *message) {
     cout << message << endl;
 }
+
+unsigned int util::texture_from_file(const char *filename, const char *directory) {
+    int width,height,channels;
+    filesystem::path full_path = directory;
+    //full_path =  absolute(full_path);
+    full_path.append(filename);
+    if(!filesystem::exists(full_path)){
+        throw runtime_error("File does not exists");
+    }
+    int buff_len = full_path.string().size()*3+1;
+    auto buff = make_unique<char[]>(buff_len);;
+    stbi_convert_wchar_to_utf8(buff.get(),buff_len,full_path.c_str());
+    auto texture_data = stbi_load(buff.get(),&width,&height,&channels,0);
+    if(texture_data == nullptr) throw  std::runtime_error("Could not load texture from"s+full_path.string());
+
+    unsigned  int texture_id = 0;
+    glGenTextures(1,&texture_id);
+    glBindTexture(GL_TEXTURE_2D,texture_id);
+    int image_format = 0;
+    if(channels == 3) image_format = GL_RGB;
+    else if(channels == 4) image_format = GL_RGBA;
+    else if(channels == 1) image_format = GL_ALPHA;
+    glTexImage2D(GL_TEXTURE_2D,0,image_format,width,height,0,image_format,GL_UNSIGNED_BYTE,texture_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    return texture_id;
+}
+
+
 
