@@ -1,6 +1,5 @@
 project(model-mesh)
 find_path(STB_INCLUDE_DIRS "stb_image.h")
-message(WARNING  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/)
 add_executable(model-mesh main.cpp ../util.cpp ../Shader.cpp ../Model.cpp  ../Mesh.cpp)
 file(GLOB RESOURCE_FILE ${CMAKE_SOURCE_DIR}/resource/*)
 add_custom_command(

@@ -52,9 +52,9 @@ vec3 CalcDirLight(dir_light light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(point_light light);
 void main(){
     vec3 result = CalcSpotLight(spotLight);
-    for(int i = 0 ; i < NR_POINT_LIGHTS ; i++){
-        result += CalcPointLight(pointLights[i]);
-    }
+//    for(int i = 0 ; i < NR_POINT_LIGHTS ; i++){
+//        result += CalcPointLight(pointLights[i]);
+//    }
     FragColor = vec4(result,1.f);
 }
 vec3 CalcSpotLight(spot_light light ){

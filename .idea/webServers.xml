@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="5a152396-3fe1-4db7-9a92-5c5c1c87ccbe" name="Shaders" url="http://localhost">
+        <fileTransfer mountedRoot="D:\Code\graphic\LearnOpenGL\Advance-stencil_testing" accessType="MOUNT" port="0" />
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -19,8 +19,8 @@ using namespace std;
 
 int main(){
     auto window = util::prepare_window();
-    Shader s("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/vertex.vs.glsl",
-    "D://Code/graphic/LearnOpenGL/lighting-multiple_lights/fragment.fs.glsl");
+    Shader s("shaders/vertex.vs.glsl",
+    "shaders/fragment.fs.glsl");
     glm::vec3 pointLightPositions[] = {
             glm::vec3( 0.7f,  0.2f,  2.0f),
             glm::vec3( 2.3f, -3.3f, -4.0f),
@@ -75,7 +75,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
     int text1_width,text1_height,channels_num;
-    unsigned char* text1_data = stbi_load("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/container2.png",&text1_width,&text1_height,&channels_num,0);
+    unsigned char* text1_data = stbi_load("D://Code/graphic/LearnOpenGL/Advance-stencil_testing/container2.png",&text1_width,&text1_height,&channels_num,0);
     if(text1_data == nullptr){
         std::cout<<"load image fail"<<endl;
         return 0;
@@ -90,7 +90,7 @@ int main(){
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D,specular_text);
     int  specular_text_width,specular_text_height,specular_text_channel;
-    auto specular_data =  stbi_load("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/container2_specular.png",&specular_text_width,&specular_text_height,&specular_text_channel,0);
+    auto specular_data =  stbi_load("D://Code/graphic/LearnOpenGL/Advance-stencil_testing/container2_specular.png",&specular_text_width,&specular_text_height,&specular_text_channel,0);
     if(specular_data == nullptr){
         cout<<"load specular texture failed"<<endl;
         return 0;
@@ -112,7 +112,7 @@ int main(){
     for(int i = 0 ; i < point_light_num; ++i){
         s.set_vec3(("pointLights["s+ to_string(i)+"].position").c_str(),pointLightPositions[i]);
     }
-
+    cout<<"";
     unsigned int light_VAO;
     glGenVertexArrays(1, &light_VAO);
     glBindVertexArray(light_VAO);
@@ -122,19 +122,35 @@ int main(){
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(sizeof(float)*3));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    Shader light_source_shader("D://Code/graphic/LearnOpenGL/lighting-multiple_lights/vertex.vs.glsl",
-    "D://Code/graphic/LearnOpenGL/lighting-multiple_lights/light_source.fs.glsl");
+    Shader light_source_shader("shaders/vertex.vs.glsl",
+    "shaders/light_source.fs.glsl");
     light_source_shader.use();
     light_source_shader.set_mat4("projection",projection_matrix);
     light_source_shader.set_mat4("model", glm::scale(glm::translate(glm::mat4 (1.0f), light_pos),glm::vec3(0.2f)) );
     light_source_shader.set_vec3("light_pos",light_pos);
 
+    unsigned int border_VAO;
+    glGenVertexArrays(1,&border_VAO);
+    glBindVertexArray(border_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER,VBO);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float),0);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(sizeof(float)*3));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    Shader border_shader("shaders/vertex.vs.glsl","shaders/light_source.fs.glsl");
+    border_shader.use();
+    border_shader.set_mat4("projection",projection_matrix);
+    border_shader.set_vec3("light_pos",light_pos);
+
+
     //light_source_shader.set_mat4("model", model_matrix);
 
     util::init_mouse(window, camera_front);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
+
         glm::vec3 lightColor(1.0f,1.0f,1.0f);
 
 
@@ -156,30 +172,50 @@ int main(){
         light_source_shader.use();
         light_source_shader.set_mat4("view",view_matrix);
 
+        border_shader.use();
+        border_shader.set_mat4("view",view_matrix);
+
 
         //*************************
 
-        s.use();
+
+        glStencilOp(GL_KEEP, GL_KEEP,GL_REPLACE);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
         for(const auto & position :cubePositions){
-            s.set_mat4("model",glm::translate(glm::mat4(1.0f),position));
+            auto tmp_model_map = glm::translate(glm::mat4(1.f),position);
+            s.use();
+            s.set_mat4("model",tmp_model_map);
+            glStencilFunc(GL_ALWAYS,1,0xFF);
+            glStencilMask(0xFF);
             glBindVertexArray(VAO);
             glDrawArrays(GL_TRIANGLES,0,36);
 
-        }
-
-        light_source_shader.use();
-        glBindVertexArray(light_VAO);
-        for(int i = 0 ; i < 4; ++i){
-            light_source_shader.set_mat4("model",glm::translate(glm::mat4(1.f),pointLightPositions[i]));
+            glDisable(GL_DEPTH_TEST);
+            glStencilFunc(GL_NOTEQUAL,1,0xFF);
+            glStencilMask(0x00);
+            glBindVertexArray(border_VAO);
+            border_shader.use();
+            float scale = 1.02f;
+            border_shader.set_mat4("model",glm::scale(tmp_model_map,{scale,scale,scale}));
             glDrawArrays(GL_TRIANGLES,0,36);
-            //s.set_vec3(("pointLights["s+ to_string(i)+"].position").c_str(),pointLightPositions[i]);
+            glStencilMask(0xFF);
+
+            glEnable(GL_DEPTH_TEST);
+            //glStencilFunc(GL_ALWAYS,1,0xFF);
         }
 
-        
+//        light_source_shader.use();
+//        glBindVertexArray(light_VAO);
+//        for(int i = 0 ; i < 4; ++i){
+//            light_source_shader.set_mat4("model",glm::scale(glm::translate(glm::mat4(1.f),pointLightPositions[i]),glm::vec3(0.3f)));
+//            glDrawArrays(GL_TRIANGLES,0,36);
+//            //s.set_vec3(("pointLights["s+ to_string(i)+"].position").c_str(),pointLightPositions[i]);
+//        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
         glClearColor(0.0f,0.0f,0.0f,0.0f);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
     }
     
 }
