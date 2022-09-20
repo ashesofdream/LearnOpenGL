@@ -137,5 +137,15 @@ unsigned int util::texture_from_file(const char *filename, const char *directory
     return texture_id;
 }
 
+std::array<unsigned int, 2> util::GenVBOVAOAndBind(unsigned int buffer_type){
+    unsigned int VAO,VBO;
+    glGenBuffers(1,&VBO);
+    glGenVertexArrays(1,&VAO);
+    glBindVertexArray(VAO);
+    glBindBuffer(buffer_type,VBO);
+    return {VBO,VAO}; 
+    
+}
+
 
 

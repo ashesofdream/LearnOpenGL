@@ -12,6 +12,7 @@
 #include<unordered_map>
 #include<deque>
 #include <set>
+#include <map>
 
 
 using namespace std;
@@ -31,11 +32,6 @@ int main(){
     auto func = [](const iter_type& left,const iter_type& right){
         return left->first.size() < right->first.size()||left->first<right->first;
     };
-    unordered_map<string,int> map;
-    set<iter_type ,decltype(func)> order_set(func);
-    auto tmp = map.find("nidaye");
-    auto t_iter = map.find("nidaye");
-    order_set.insert(t_iter);
 
 
 
@@ -135,8 +131,36 @@ int main(){
                     glm::vec3( 0.5f, 0.0f, -0.6f)
             };
     glEnable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
+    //annother framebuffer
+    unsigned int fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER,fbo);
+
+    //bind texture attachment
+    unsigned int texture_attach;
+    glGenTextures(1, &texture_attach);
+    glBindTexture(GL_TEXTURE_2D,texture_attach);
+    glTexImage2D(GL_TEXTURE_2D, 0 ,GL_RGB,scr_height,scr_width,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D,0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,texture_attach,0);
+
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER,rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,scr_height,scr_width);
+    glBindRenderbuffer(GL_RENDERBUFFER,0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    map<int,int> m;
+    m.insert(make_pair(3,3));
+    
+
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
 

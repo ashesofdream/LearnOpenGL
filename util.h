@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 struct GLFWwindow;
 #include <glm/glm.hpp>
 
@@ -8,4 +9,5 @@ namespace util {
 	void init_mouse(GLFWwindow* window,glm::vec3& camera_front,float yaw_=270.f, float pitch_=0.f);
     void debug(const char* message);
     unsigned int texture_from_file(const char* filename,const char* directory);
+	std::array<unsigned int, 2> GenVBOVAOAndBind(unsigned int buffer_type=0x8892);//defalut is GL_ARRAY_BUFFER
 }

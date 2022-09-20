@@ -9,6 +9,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 #include <iostream>
+#include<unordered_map>
+#include<deque>
+#include <set>
 
 
 using namespace std;
@@ -21,6 +24,21 @@ int main(){
     auto window = util::prepare_window();
     Shader shaders("shaders/vertex.vs.glsl",
     "shaders/fragment.fs.glsl");
+
+    string_view  view;
+
+    using iter_type =    unordered_map<string,int>::iterator;
+    auto func = [](const iter_type& left,const iter_type& right){
+        return left->first.size() < right->first.size()||left->first<right->first;
+    };
+    unordered_map<string,int> map;
+    set<iter_type ,decltype(func)> order_set(func);
+    auto tmp = map.find("nidaye");
+    auto t_iter = map.find("nidaye");
+    order_set.insert(t_iter);
+
+
+
 
     glm::vec3 eye_pos {0.f,0.f,5.f};
     glm::vec3 camera_up {0.f,1.f,0.f};
@@ -117,6 +135,7 @@ int main(){
                     glm::vec3( 0.5f, 0.0f, -0.6f)
             };
     glEnable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);

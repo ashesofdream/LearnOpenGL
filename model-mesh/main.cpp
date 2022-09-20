@@ -65,6 +65,7 @@ int main(){
     light_source_shader.set_mat4("model", glm::scale(glm::translate(glm::mat4 (1.0f), light_pos),glm::vec3(0.2f)) );
     light_source_shader.set_vec3("light_pos",light_pos);
 
+    
 
     util::init_mouse(window, camera_front);
     while (!glfwWindowShouldClose(window)) {
