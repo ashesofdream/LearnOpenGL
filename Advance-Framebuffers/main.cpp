@@ -151,7 +151,7 @@ int main(){
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER,rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,scr_height,scr_width);
+    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,scr_width,scr_height);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
     //glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -193,7 +193,7 @@ int main(){
         glBindFramebuffer(GL_FRAMEBUFFER,fbo);
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.1f,0.1f,0.1f,1.f);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
         glm::mat4 view_matrix = glm::lookAt(eye_pos,eye_pos+camera_front*glm::vec3(3), camera_up);
         shaders.use();
