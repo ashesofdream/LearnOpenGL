@@ -112,7 +112,6 @@ int main(){
     light_source_shader.set_vec3("light_pos",light_pos);
 
 
-    glEnable(GL_DEPTH_TEST);
     util::init_mouse(window,camera_front);
 
     vector<glm::vec3> vegetation;
@@ -142,7 +141,7 @@ int main(){
     unsigned int texture_attach;
     glGenTextures(1, &texture_attach);
     glBindTexture(GL_TEXTURE_2D,texture_attach);
-    glTexImage2D(GL_TEXTURE_2D, 0 ,GL_RGB,scr_height,scr_width,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0 ,GL_RGB,scr_width,scr_height,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D,0);
@@ -153,16 +152,48 @@ int main(){
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER,rbo);
     glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,scr_height,scr_width);
-    glBindRenderbuffer(GL_RENDERBUFFER,0);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
-    map<int,int> m;
-    m.insert(make_pair(3,3));
+    //glBindFramebuffer(GL_FRAMEBUFFER,0);
     
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!= GL_FRAMEBUFFER_COMPLETE){
+        cout <<"FrameBfuffer not compelet"<<endl;
+    }else{
+        cout <<"buffer compelet" <<endl; 
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+    //Create a Shader to output texture direct
+    Shader direct_buffer_output_shader("shaders/direct_buffer_out.vs.glsl","shaders/direct_buffer_out.fs.glsl");
+    float quadVertices[] ={ // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+    auto &&[quadVBO,quadVAO] = util::GenVBOVAOAndBind();
+    glBufferData(GL_ARRAY_BUFFER,sizeof(quadVertices),quadVertices,GL_STATIC_DRAW);
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),reinterpret_cast<void*>(0));
+    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),
+    //reinterpret_cast<void*>(2*sizeof(float))
+    (void *)(sizeof(float)*2)
+    );
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    shaders.set_int("samp",0);
+    glBindVertexArray(0);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);    
 
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
+        glBindFramebuffer(GL_FRAMEBUFFER,fbo);
+        glEnable(GL_DEPTH_TEST);
+        glClearColor(0.1f,0.1f,0.1f,1.f);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 view_matrix = glm::lookAt(eye_pos,eye_pos+camera_front*glm::vec3(3), camera_up);
         shaders.use();
@@ -173,7 +204,7 @@ int main(){
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,ground_text_id);
         glDrawArrays(GL_TRIANGLES,0,6);
-
+        
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,cube_text_id);
@@ -205,10 +236,22 @@ int main(){
         light_source_shader.set_mat4("view",view_matrix);
         glBindVertexArray(light_VAO);
         glDrawArrays(GL_TRIANGLES,0,36);
+
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+
+        direct_buffer_output_shader.use();
+        glBindVertexArray(quadVAO);
+        glBindTexture(GL_TEXTURE_2D,texture_attach);
+        glActiveTexture(GL_TEXTURE0);
+        
+        glDrawArrays(GL_TRIANGLES,0,6);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
-        glClearColor(0.0f,0.0f,0.0f,0.0f);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+        // glClearColor(0.0f,0.0f,0.0f,0.0f);
+        // glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
     }
     
 }
