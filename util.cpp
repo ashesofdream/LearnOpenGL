@@ -147,5 +147,16 @@ std::array<unsigned int, 2> util::GenVBOVAOAndBind(unsigned int buffer_type){
     
 }
 
-
+unsigned int util::loadCubemap(std::vector<std::string> faces){
+    unsigned int textureID;
+    glGenTextures(1,&textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP,textureID);
+    int width , height ,channels;
+    for(int i = 0 ; i < faces.size() ; ++i ){
+        auto image_data = stbi_load(faces[i].c_str(), &width, &height, &channels, 0);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i , 0 , GL_RGB , width , height , 0 , GL_RGB , GL_UNSIGNED_BYTE ,image_data);
+        stbi_image_free(image_data);
+    }
+    return textureID;
+}
 
