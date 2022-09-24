@@ -4,6 +4,8 @@
 #include <iostream>
 #include<glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <ostream>
+#include <stdexcept>
 #define STBI_WINDOWS_UTF8
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -154,6 +156,7 @@ unsigned int util::loadCubemap(std::vector<std::string> faces){
     int width , height ,channels;
     for(int i = 0 ; i < faces.size() ; ++i ){
         auto image_data = stbi_load(faces[i].c_str(), &width, &height, &channels, 0);
+        if(image_data==nullptr) throw runtime_error("file: "s+faces[i].c_str()+" is not exist");
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i , 0 , GL_RGB , width , height , 0 , GL_RGB , GL_UNSIGNED_BYTE ,image_data);
         stbi_image_free(image_data);
     }

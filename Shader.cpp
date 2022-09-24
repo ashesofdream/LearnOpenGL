@@ -12,7 +12,7 @@
 //#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 using namespace std;
-void checkCompileErrors(unsigned int shader, std::string type)
+void checkCompileErrors(unsigned int shader, std::string type ,const std::string& path)
     {
         int success;
         char infoLog[1024];
@@ -22,7 +22,7 @@ void checkCompileErrors(unsigned int shader, std::string type)
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type <<" path:"<<path<< "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
         else
@@ -31,7 +31,7 @@ void checkCompileErrors(unsigned int shader, std::string type)
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type <<" path:"<<path<< "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
     }
@@ -52,9 +52,9 @@ Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path){
     glShaderSource(fragment_shader,1,&p_fragment_source,NULL);
     
     glCompileShader(vertex_shader);
-    checkCompileErrors(vertex_shader, "VERTEX");
+    checkCompileErrors(vertex_shader, "VERTEX",vertex_shader_path);
     glCompileShader(fragment_shader);
-    checkCompileErrors(fragment_shader, "FRAGMENT");
+    checkCompileErrors(fragment_shader, "FRAGMENT",fragment_shader_path);
     
     program_id = glCreateProgram();
     glAttachShader(program_id,vertex_shader);
