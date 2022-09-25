@@ -19,20 +19,36 @@ int main(){
     glm::vec3 camera_front {0.f,0.f,-1.f};
     auto projection_matrix = glm::perspective(glm::radians(45.f), static_cast<float>(scr_width)/scr_height ,0.1f, 100.f);
 
-    Shader worldShader("shaders/world.vs.glsl","shaders/world.fs.glsl");
+    // Shader worldShader("shaders/world.vs.glsl","shaders/world.fs.glsl");
+    // worldShader.use();
+    // auto &&[cubeVBO,cubeVAO]=util::GenVBOVAOAndBind();
+    // glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices_with_texture),cubeVertices_with_texture,GL_STATIC_DRAW);
+    // glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(float)*5,reinterpret_cast<void*>(0));
+    // glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,sizeof(float)*5,reinterpret_cast<void*>(sizeof(float)*3));
+    // glEnableVertexAttribArray(0);
+    // glEnableVertexAttribArray(1);
+    // auto cube_texture = util::texture_from_file("container.jpg", "../resource/");
+    // worldShader.set_mat4("projection", projection_matrix);
+    // worldShader.set_int("samp", 0);
+    // glm::vec3 cube_vertice{0.f,0.f,0.f};
+    //glEnable(GL_DEPTH_TEST);
+
+    Shader worldShader("shaders/reflect_box.vs.glsl",
+    "shaders/reflect_box.fs.glsl");
+    
     worldShader.use();
     auto &&[cubeVBO,cubeVAO]=util::GenVBOVAOAndBind();
-    glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices_with_texture),cubeVertices_with_texture,GL_STATIC_DRAW);
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(float)*5,reinterpret_cast<void*>(0));
-    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,sizeof(float)*5,reinterpret_cast<void*>(sizeof(float)*3));
+    glBufferData(GL_ARRAY_BUFFER,sizeof(cube_vertices_with_normal),cube_vertices_with_normal,GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,reinterpret_cast<void*>(0));
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,reinterpret_cast<void*>(sizeof(float)*3));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    auto cube_texture = util::texture_from_file("container.jpg", "../resource/");
+//    auto cube_texture = util::texture_from_file("container.jpg", "../resource/");
     worldShader.set_mat4("projection", projection_matrix);
     worldShader.set_int("samp", 0);
     glm::vec3 cube_vertice{0.f,0.f,0.f};
-    //glEnable(GL_DEPTH_TEST);
-    
+
+
     Shader skybox_shader("shaders/skybox.vs.glsl","shaders/skybox.fs.glsl");
     skybox_shader.use();
     auto &&[skyVBO , skyVAO] = util::GenVBOVAOAndBind();
@@ -77,8 +93,9 @@ int main(){
         worldShader.use();
         worldShader.set_mat4("view", view_matrix);
         worldShader.set_mat4("model",glm::translate(glm::mat4(1.f), cube_vertice));
+        worldShader.set_vec3("eye_pos", eye_pos);
         glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_2D,cube_texture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,sky_texture);
         glDrawArrays(GL_TRIANGLES,0,36);
 
 

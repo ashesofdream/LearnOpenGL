@@ -7,5 +7,5 @@ out vec4 FragColor;
 void main(){
     vec3 in_dir = normalize(FragPos - eye_pos);
     vec3 out_dir = reflect(in_dir,normalize(normal));
-    FragColor = texture(samp,normalize(normal));
+    FragColor = vec4(texture(samp,out_dir).rgb,1.0);
 }
