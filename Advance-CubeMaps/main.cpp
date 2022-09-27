@@ -1,7 +1,7 @@
 #include "../Shader.h"
 #include "../variable.h"
 #include "../util.h"
-
+#include "../Model.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -71,10 +71,14 @@ int main(){
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     skybox_shader.set_int("skybox", 0);
     skybox_shader.set_mat4("projection", projection_matrix);
-    
+
+    //load robot model
+    Model robot_model("../resource/nanosuit.obj");
+
     util::init_mouse(window, camera_front);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    Model m ("../resource/nanosuit.obj");
     // glEnable(GL_STENCIL_TEST);
     while(!glfwWindowShouldClose(window)){
        util::process_input(window, eye_pos, camera_front, camera_up);
@@ -92,11 +96,12 @@ int main(){
         // glStencilOp(GL_KEEP,GL_KEEP,GL_INCR);
         worldShader.use();
         worldShader.set_mat4("view", view_matrix);
-        worldShader.set_mat4("model",glm::translate(glm::mat4(1.f), cube_vertice));
+        worldShader.set_mat4("model",glm::scale(glm::mat4(1.f), {0.5f,0.5f,0.5f}));
         worldShader.set_vec3("eye_pos", eye_pos);
-        glBindVertexArray(cubeVAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP,sky_texture);
-        glDrawArrays(GL_TRIANGLES,0,36);
+        // glBindVertexArray(cubeVAO);
+        // glBindTexture(GL_TEXTURE_CUBE_MAP,sky_texture);
+        // glDrawArrays(GL_TRIANGLES,0,36);
+        m.Draw(worldShader);
 
 
         // glStencilFunc(GL_EQUAL,0,0xff);
