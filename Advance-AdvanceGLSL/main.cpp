@@ -2,15 +2,11 @@
 #include "../variable.h"
 #include "../util.h"
 #include "../Model.h"
-#include <corecrt_memcpy_s.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
-#include <iostream>
-
 
 int main(){
     auto window = util::prepare_window();

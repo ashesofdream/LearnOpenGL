@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include "Mesh.h"
+#include <assimp/material.h>
 
 class aiNode;
 class Shader;
@@ -15,7 +16,6 @@ struct aiScene;
 class aiMesh;
 class aiMaterial;
 struct Texture;
-enum aiTextureType;
 class Model {
 private:
     std::vector<Mesh> meshes;

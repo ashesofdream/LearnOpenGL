@@ -35,16 +35,16 @@ void checkCompileErrors(unsigned int shader, std::string type ,const std::string
             }
         }
     }
-Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path){
+Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path,const char* geometry_shader_path){
     std::ifstream vertext_source_stream(vertex_shader_path);
     std::ifstream fragment_source_stream(fragment_shader_path);
     std::string vertex_source((std::istreambuf_iterator<char>(vertext_source_stream)),std::istreambuf_iterator<char>());
     auto p_vertex_source = vertex_source.c_str();
     std::string fragment_source((std::istreambuf_iterator<char>(fragment_source_stream)),std::istreambuf_iterator<char>());
     auto p_fragment_source = fragment_source.c_str();
-    //std::cout<<"frag:"<<p_fragment_source<<std::endl;
+    std::cout<<"frag:"<<p_fragment_source<<std::endl;
     //std::cout<<"vertex"<<p_vertex_source<<std::endl;
-    unsigned int vertex_shader,fragment_shader;
+    unsigned int vertex_shader,fragment_shader,geometry_shader;
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);;
     
@@ -55,13 +55,26 @@ Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path){
     checkCompileErrors(vertex_shader, "VERTEX",vertex_shader_path);
     glCompileShader(fragment_shader);
     checkCompileErrors(fragment_shader, "FRAGMENT",fragment_shader_path);
-    
+
+    if(geometry_shader_path){
+        cout<<"geometry exist"<<endl;
+        geometry_shader = glCreateShader(GL_GEOMETRY_SHADER);
+        std::ifstream  geometry_source_stream(geometry_shader_path);
+        std::string geometry_shader_source((std::istreambuf_iterator<char>(geometry_source_stream)),std::istreambuf_iterator<char>());
+        auto p_geometry_source = geometry_shader_source.c_str();
+        glShaderSource(geometry_shader,1,&p_geometry_source,NULL);
+        glCompileShader(geometry_shader);
+        checkCompileErrors(geometry_shader,"GEOMETRY",geometry_shader_path);
+    }
+
     program_id = glCreateProgram();
     glAttachShader(program_id,vertex_shader);
     glAttachShader(program_id,fragment_shader);
+    if(geometry_shader_path) glAttachShader(program_id,geometry_shader),cout<<"link geometry shader"<<endl;
     glLinkProgram(program_id);
     glDeleteShader(fragment_shader);
     glDeleteShader(vertex_shader);
+    if(geometry_shader_path) glDeleteShader(geometry_shader);
 
     this->use();
     shader_macro.assign({GL_TEXTURE0,GL_TEXTURE1,GL_TEXTURE2,GL_TEXTURE3,GL_TEXTURE4,GL_TEXTURE5,GL_TEXTURE6,GL_TEXTURE7,GL_TEXTURE8,GL_TEXTURE9,GL_TEXTURE10,
