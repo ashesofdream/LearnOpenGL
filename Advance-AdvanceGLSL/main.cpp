@@ -71,7 +71,6 @@ int main(){
     skybox_shader.set_mat4("projection", projection_matrix);
 
     //load robot model
-    Model robot_model("../resource/nanosuit.obj");
 
     util::init_mouse(window, camera_front);
     glEnable(GL_DEPTH_TEST);

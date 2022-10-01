@@ -30,3 +30,6 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 #add_subdirectory(Advance-CubeMaps)
 #add_subdirectory(Advance-AdvanceGLSL)
 add_subdirectory(Advance-GeometryShader)
+
+
+#add_subdirectory(SimpleTest)

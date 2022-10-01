@@ -1,7 +1,7 @@
 project(Advance-GeometryShader)
 find_path(Advance-GeometryShader "stb_image.h")
 
-add_executable(Advance-GeometryShader main.cpp ../util.cpp ../Shader.cpp ../Mesh.cpp ../Mesh.h ../Model.cpp ../Advance-GeometryShader/main.cpp)
+add_executable(Advance-GeometryShader main.cpp ../util.cpp ../Shader.cpp ../Mesh.cpp ../Mesh.h ../Model.cpp  )
 
 file(CREATE_LINK ${CMAKE_SOURCE_DIR}/resource ${CMAKE_BINARY_DIR}/resource SYMBOLIC)
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/shaders ${CMAKE_CURRENT_BINARY_DIR}/shaders SYMBOLIC)
