@@ -27,7 +27,10 @@ private:
     std::unordered_map<std::string ,unsigned int> loaded_texture_map;
 public:
     Model(const char* path);
+    void instance_set_models(const std::vector<glm::mat4>& model_arrays);
     void Draw(Shader& shader);
+    const std::vector<Mesh>& get_meshes();
+    void Draw(Shader &shader, int num);
 };
 
 

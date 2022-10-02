@@ -11,53 +11,72 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <random>
 
 
 int main(){
-    auto eye_pos = glm::vec3(0.f,0.f,5.f);
+    auto eye_pos = glm::vec3(0.f,0.f,125.f);
     auto camera_front = glm::vec3 (0.f,0.f,-1.f);
     auto camera_up = glm::vec3 (0.f,1.f,0.f);
 
+
+    int small_plane_num = 1;
+    float circle_offset = 5.f;
+    float radius = 50.f;
+
+    std::random_device rand_dev;
+    std::mt19937 gen(rand_dev());
+    std::uniform_real_distribution<float>  dist(-circle_offset,circle_offset);
+    std::uniform_real_distribution<float> scale_dist(0.05,0.25);
+    std::uniform_real_distribution<float> angle_dist(0.f,360.f);
     auto window = util::prepare_window();
-    Shader cur_shader("shaders/World.vs.glsl","shaders/fragment_shader.fs.glsl","shaders/World.gs.glsl");
-    cur_shader.use();
+    auto projection_matrix = glm::perspective(glm::radians(45.f),800.f/600.f,1.f,200.f);
+    //Shader
+    Shader instance_shader("shaders/World.vs.glsl","shaders/World.fs.glsl");
+    instance_shader.use();
+    instance_shader.set_mat4("projection",projection_matrix);
 
+    Shader planet_shader("shaders/big_planet.vs.glsl","shaders/World.fs.glsl");
+    planet_shader.use();
+    planet_shader.set_mat4("projection",projection_matrix);
+    float planet_scale = 5.f;
+    auto planet_model = glm::scale(glm::mat4(1.f),glm::vec3{planet_scale,planet_scale,planet_scale});
+    planet_shader.set_mat4("model",planet_model);
+    std::vector<glm::mat4> model_arrays(small_plane_num);
+    for(int i = 0 ; i < small_plane_num ; ++i){
+        glm::mat4  model(1.f);
+        float angle = (float)i / (float)small_plane_num * 360.0f;
+        float radians = glm::radians(angle);
+        float displacement = dist(gen);
+        float x = glm::sin(radians)*radius + displacement*20;
+        displacement = dist(gen);
+        float z = glm::cos(radians)*radius + displacement*20;
+        displacement = dist(gen);
+        float y = displacement * 0.2;
+        model = glm::translate(model,{x,y,z});
 
+        float scale = scale_dist(gen);
+        model = glm::scale(model,{scale,scale,scale});
 
-    unsigned int uniform_buffer_obj;
-    glGenBuffers(1,&uniform_buffer_obj);
-    glBindBuffer(GL_UNIFORM_BUFFER,uniform_buffer_obj);
-    glBindBufferBase(GL_UNIFORM_BUFFER,0,uniform_buffer_obj);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4)*2, nullptr,GL_STATIC_DRAW);
-    auto projection_matrix = glm::perspective(glm::radians(45.f),800.f/600.f,0.1f,100.f);
-    glBufferSubData(GL_UNIFORM_BUFFER,0, sizeof(glm::mat4), glm::value_ptr(projection_matrix));
+        float rotate_angle = angle_dist(gen);
+        model = glm::rotate(model,glm::radians(rotate_angle),glm::vec3{0.4f,0.6f,0.8f});
+
+        model_arrays[i] = model;
+    }
+    Model planet("../resource/planet.obj");
+    Model rock("../resource/rock.obj");
+    rock.instance_set_models(model_arrays);
     util::init_mouse(window,camera_front);
-    Model robot_model("../resource/nanosuit.obj");
-//    cur_shader.set_mat4("model",glm::mat4(1.f));
     glEnable(GL_DEPTH_TEST);
-
-    Shader model_shader("shaders/World.vs.glsl","shaders/model.fs.glsl");
-    model_shader.use();
-    model_shader.set_vec3("light.light_dir", glm::normalize(glm::vec3{1.f,1.f,1.f}));
-    model_shader.set_vec3("light.ambient", {0.2f, 0.2f, 0.2f}); //less effect
-    model_shader.set_vec3("light.diffuse", {0.5f, 0.5f, 0.5f}); //more effect 将光照调暗了一些以搭配场景
-    model_shader.set_vec3("light.specular", {1.0f, 1.0f, 1.0f});
-
     while (!glfwWindowShouldClose(window)){
         util::process_input(window,eye_pos,camera_front,camera_up);
-        auto view_matrix = glm::lookAt(eye_pos,eye_pos+camera_front,camera_up);
-        glBindBuffer(GL_UNIFORM_BUFFER,uniform_buffer_obj);
-        glBufferSubData(GL_UNIFORM_BUFFER,sizeof(glm::mat4),sizeof(glm::mat4),glm::value_ptr(view_matrix));
-
-        cur_shader.use();
-        cur_shader.set_mat4("model",glm::scale(glm::mat4(1.f),glm::vec3(0.3f,0.3f,0.3f)));
-
-        robot_model.Draw(cur_shader);
-
-        model_shader.use();
-        model_shader.set_mat4("model",glm::scale(glm::mat4(1.f),glm::vec3(0.3f,0.3f,0.3f)));
-        model_shader.set_vec3("eye_pos",eye_pos);
-        robot_model.Draw(model_shader);
+        auto view_matrix =  glm::lookAt(eye_pos, eye_pos+camera_front, camera_up);
+        instance_shader.use();
+        instance_shader.set_mat4("view",view_matrix);
+        rock.Draw(instance_shader,small_plane_num);
+        planet_shader.use();
+        planet_shader.set_mat4("view",view_matrix);
+        planet.Draw(planet_shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

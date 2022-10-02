@@ -28,6 +28,8 @@ private:
 public:
     Mesh(std::vector<Vertex> vertices, std::vector<int> indices, std::vector<Texture> textures);
     void draw(const Shader& shader);
+    void draw(const Shader& shader,int instance_num);
+    const unsigned int get_VAO() const;
 };
 
 

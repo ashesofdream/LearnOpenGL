@@ -60,3 +60,29 @@ void Mesh::draw(const Shader& shader){
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
+
+const unsigned int Mesh::get_VAO() const {
+    return VAO;
+}
+
+void Mesh::draw(const Shader &shader, int instance_num) {
+    shader.use();
+    unsigned int diffuseNr = 1,specularNr = 1;
+    for(unsigned int i = 0 ; i < textures.size(); ++i){
+        glActiveTexture(GL_TEXTURE0+i);
+        std::string number;
+        std::string name= textures[i].type;
+        if(name== "texture_diffuse"){
+            number = std::to_string(diffuseNr);
+        }else if(name == "texture_specular"){
+            number = std::to_string(specularNr);
+        }
+        auto sampler_name = ("material."s+name+number);
+        shader.set_int(sampler_name.c_str(),i);
+        glBindTexture(GL_TEXTURE_2D,textures[i].id);
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0,instance_num);
+    glBindVertexArray(0);
+}

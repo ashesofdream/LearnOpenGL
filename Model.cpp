@@ -8,6 +8,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <glad/glad.h>
 
 using namespace std;
 Model::Model(const char *path) {
@@ -91,4 +92,39 @@ void Model::Draw(Shader &shader) {
         mesh.draw(shader);
     }
 }
+
+const std::vector<Mesh> &Model::get_meshes() {
+    return meshes;
+}
+
+void Model::instance_set_models(const vector<glm::mat4> &model_arrays) {
+    constexpr auto vec4size = sizeof(glm::vec4);
+    auto&& [instance_vbo,instance_vao]=util::GenVBOVAOAndBind();
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4)* model_arrays.size(),&model_arrays[0],GL_STATIC_DRAW);
+
+    for(auto& mesh: meshes) {
+        glBindVertexArray(mesh.get_VAO());
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4size, nullptr);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4size, reinterpret_cast<void *>(vec4size));
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4size, reinterpret_cast<void *>(2 * vec4size));
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4size, reinterpret_cast<void *>(3 * vec4size));
+        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
+        glEnableVertexAttribArray(5);
+        glEnableVertexAttribArray(6);
+
+        glVertexAttribDivisor(3,1);
+        glVertexAttribDivisor(4,1);
+        glVertexAttribDivisor(5,1);
+        glVertexAttribDivisor(6,1);
+    }
+    glBindVertexArray(0);
+}
+
+void Model::Draw(Shader &shader, int num) {
+    for(auto& mesh : meshes){
+        mesh.draw(shader,num);
+    }
+}
+
 
