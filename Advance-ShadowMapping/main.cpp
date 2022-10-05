@@ -151,16 +151,7 @@ int main(){
                                    -1.f,-1.f,0.f,0.f,
                                    1.f,-1.f,1.f,0.f,
                                    1.f,1.f,1.f,1.f};
-//    float show_texture_array[] ={ // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-//            // positions   // texCoords
-//            -1.0f,  1.0f,  0.0f, 1.0f,
-//            -1.0f, -1.0f,  0.0f, 0.0f,
-//            1.0f, -1.0f,  1.0f, 0.0f,
-//
-//            -1.0f,  1.0f,  0.0f, 1.0f,
-//            1.0f, -1.0f,  1.0f, 0.0f,
-//            1.0f,  1.0f,  1.0f, 1.0f
-//    };
+
     auto&&[show_texture_vbo,show_texture_vao] = util::GenVBOVAOAndBind();
     glBufferData(GL_ARRAY_BUFFER, sizeof(show_texture_array),show_texture_array,GL_STATIC_DRAW);
     glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,sizeof(float)*4,nullptr);
@@ -168,6 +159,10 @@ int main(){
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     direct_shader.set_int("samp",0);
+    //begin prepare for  render shadow
+    shaders.use();
+    shaders.set_mat4("LightSpaceTrans",light_space_projection_matrix*light_space_view_matrix);
+    shaders.set_int("depth_map",1);
 
     auto draw_func = [&](Shader& shader_){
         shader_.set_mat4("model", glm::mat4(1.0f));
@@ -205,11 +200,11 @@ int main(){
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
 
-//        glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
-//        depth_shader.use();
-//        draw_func(depth_shader);
-//
-//        glBindFramebuffer(GL_FRAMEBUFFER,0);
+        glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
+        depth_shader.use();
+        draw_func(depth_shader);
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+
 //        direct_shader.use();
 //        glDisable(GL_DEPTH_TEST);
 //        glBindVertexArray(show_texture_vao);
@@ -223,6 +218,9 @@ int main(){
         shaders.set_int("material.diffuse",0);
         shaders.set_mat4("model",e_matrix);
         shaders.set_mat4("view",view_matrix);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,depth_texture);
+        glActiveTexture(GL_TEXTURE0);
 //        glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
 //        depth_shader.use();
 //        draw_func(depth_shader);
