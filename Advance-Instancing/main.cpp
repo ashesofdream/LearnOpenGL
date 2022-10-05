@@ -20,7 +20,7 @@ int main(){
     auto camera_up = glm::vec3 (0.f,1.f,0.f);
 
 
-    int small_plane_num = 1;
+    int small_plane_num = 100000;
     float circle_offset = 5.f;
     float radius = 50.f;
 
@@ -48,7 +48,7 @@ int main(){
         float angle = (float)i / (float)small_plane_num * 360.0f;
         float radians = glm::radians(angle);
         float displacement = dist(gen);
-        float x = glm::sin(radians)*radius + displacement*20;
+        float x = glm::sin(radians)*radius + displacement*15;
         displacement = dist(gen);
         float z = glm::cos(radians)*radius + displacement*20;
         displacement = dist(gen);

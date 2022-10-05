@@ -72,6 +72,7 @@ int main(){
     unsigned  int window_text_id = util::texture_from_file("blending_transparent_window.png","../resource");
     //mvp
     glm::mat4 projection_matrix = glm::perspective(glm::radians(45.f),scr_width/scr_height,1.f,100.f);
+    //glm::mat4 projection_matrix = glm::ortho(-1.f,1.f,-1.f,1.f,0.1f,100.f);
     shaders.set_mat4("projection",projection_matrix);
     glm::mat4 e_matrix = glm::mat4 (1.f);
 
@@ -175,31 +176,31 @@ int main(){
         glBindTexture(GL_TEXTURE_2D,ground_text_id);
         glDrawArrays(GL_TRIANGLES,0,6);
 
-//        glBindVertexArray(cubeVAO);
-//        glActiveTexture(GL_TEXTURE0);
-//        glBindTexture(GL_TEXTURE_2D,cube_text_id);
-//        glDrawArrays(GL_TRIANGLES,0,36);
+        glBindVertexArray(cubeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,cube_text_id);
+        glDrawArrays(GL_TRIANGLES,0,36);
 
-//        glm::mat4 pos_matrix = glm::translate(e_matrix, glm::vec3(-1.0f, 0.0f, -1.0f));
-//        shader_.set_mat4("model", pos_matrix);
-//        pos_matrix = glm::translate(e_matrix, glm::vec3(2.0f, 0.0f, 0.0f));
-//        shader_.set_mat4("model", pos_matrix);
-//        glDrawArrays(GL_TRIANGLES,0,36);
-//
-//        glBindVertexArray(grass_VAO);
-//        glActiveTexture(GL_TEXTURE0);
-//        glBindTexture(GL_TEXTURE_2D,grass_text_id);
-//        for(const auto& pos : vegetation){
-//            shader_.set_mat4("model", glm::translate(e_matrix,pos) );
-//            glDrawArrays(GL_TRIANGLES,0,6);
-//        };
-//
-//        glActiveTexture(GL_TEXTURE0);
-//        glBindTexture(GL_TEXTURE_2D,window_text_id);
-//        for(const auto& window_pos : windows_pos) {
-//            shader_.set_mat4("model", glm::translate(e_matrix,window_pos));
-//            glDrawArrays(GL_TRIANGLES, 0, 6);
-//        }
+        glm::mat4 pos_matrix = glm::translate(e_matrix, glm::vec3(-1.0f, 0.0f, -1.0f));
+        shader_.set_mat4("model", pos_matrix);
+        pos_matrix = glm::translate(e_matrix, glm::vec3(2.0f, 0.0f, 0.0f));
+        shader_.set_mat4("model", pos_matrix);
+        glDrawArrays(GL_TRIANGLES,0,36);
+
+        glBindVertexArray(grass_VAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,grass_text_id);
+        for(const auto& pos : vegetation){
+            shader_.set_mat4("model", glm::translate(e_matrix,pos) );
+            glDrawArrays(GL_TRIANGLES,0,6);
+        };
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,window_text_id);
+        for(const auto& window_pos : windows_pos) {
+            shader_.set_mat4("model", glm::translate(e_matrix,window_pos));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     };
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
@@ -222,7 +223,9 @@ int main(){
         shaders.set_int("material.diffuse",0);
         shaders.set_mat4("model",e_matrix);
         shaders.set_mat4("view",view_matrix);
-
+//        glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
+//        depth_shader.use();
+//        draw_func(depth_shader);
         draw_func(shaders);
 //        light_source_shader.use();
 //        light_source_shader.set_mat4("view",view_matrix);
