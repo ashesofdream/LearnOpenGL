@@ -43,7 +43,7 @@ uniform Material material;
 uniform point_light pointLights[NR_POINT_LIGHTS];
 
 in vec3 FragPos;
-in vec3 LightSpacePos;
+in vec4 LightSpacePos;
 in vec3 Normal;
 in vec2 tex1_coord;
 
@@ -57,15 +57,15 @@ void main(){
 //    for(int i = 0 ; i < NR_POINT_LIGHTS ; i++){
 //        result += CalcPointLight(pointLights[i]);
 //    }
-
-    float depth_value = texture(depth_map,LightSpacePos.xy*0.5+0.5).r;
-    if(depth_value <= LightSpacePos.z) discard;
-
+    vec3 LightCoords = LightSpacePos.xyz/LightSpacePos.w * 0.5+0.5;
+    float depth_value = texture(depth_map,LightCoords.xy).r;
+    //FragColor = vec4(vec3(depth_value),1.0);
 
     vec4 texColor = texture(material.diffuse,tex1_coord);
     if(texColor.a < 0.1) discard;
     FragColor = texColor;
-    //FragColor = 
+   if(depth_value <= LightCoords.z - 0.05) FragColor = texColor * 0.2;
+
 }
 vec3 CalcSpotLight(spot_light light ){
     //return light.position;

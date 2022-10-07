@@ -3,7 +3,7 @@ layout(location = 0) in vec3 apos;
 layout(location = 1) in vec3 anormal;
 layout(location = 2) in vec2 tex_coord;
 out vec3 FragPos;
-out vec3 LightSpacePos;
+out vec4 LightSpacePos;
 out vec3 Normal;
 out vec2 tex1_coord;
 uniform mat4 model;
@@ -20,7 +20,7 @@ void main(){
     anormal[2]/length(vec3(model[2])) ,
     0 )*model));
     tex1_coord = tex_coord;
-    LightSpacePos =vec3(vec4(FragPos,1.f) * LightSpaceTrans);
+    LightSpacePos =LightSpaceTrans*vec4(FragPos,1.f);
 //    Normal = mat3(transpose(inverse(model))) * anormal;
     //     Normal = anormal;
 }

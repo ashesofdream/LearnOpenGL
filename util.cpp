@@ -62,6 +62,9 @@ void util::process_input(GLFWwindow* window,glm::vec3 &camera_pos,const glm::vec
     if(glfwGetKey(window,GLFW_KEY_LEFT_SHIFT)== GLFW_PRESS){
         camera_pos -= camera_up*camera_speed;
     }
+    if(glfwGetKey(window,GLFW_KEY_ESCAPE)==GLFW_PRESS){
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
 }
 
 glm::vec3 * p_camera_front = nullptr;

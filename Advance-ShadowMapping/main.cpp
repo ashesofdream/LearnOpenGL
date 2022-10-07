@@ -22,7 +22,7 @@ int main(){
     Shader shaders("shaders/vertex.vs.glsl",
     "shaders/fragment.fs.glsl");
 
-    glm::vec3 eye_pos (-2.f,4.f,-1.f);
+    glm::vec3 eye_pos (0.f,0.f,5.f);
     glm::vec3 camera_up {0.f,1.f,0.f};
     glm::vec3 camera_front {0.f,0.f,1.f};
     glm::vec3 light_pos{1.2f, 1.0f, 2.0f};
@@ -117,8 +117,8 @@ int main(){
                     glm::vec3(-0.3f, 0.0f, -2.3f),
                     glm::vec3( 0.5f, 0.0f, -0.6f)
             };
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
     //from here is shadow mapping content
     unsigned int depth_texture;
@@ -136,7 +136,7 @@ int main(){
 
     //light space
     auto light_space_projection_matrix = glm::ortho(-10.f,10.f,-10.f,10.f,0.1f,10.f);
-    auto light_space_view_matrix = glm::lookAt(glm::vec3(0.f,1.f,2.f),glm::vec3 (0.f,0.f,0.f),glm::vec3 (0.f,1.f,0.f));
+    auto light_space_view_matrix = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f),glm::vec3 (0.f,0.f,0.f),glm::vec3 (0.f,1.f,0.f));
     Shader depth_shader("shaders/depth_shader.vs.glsl","shaders/depth_shader.fs.glsl");
     depth_shader.use();
     depth_shader.set_mat4("projection",light_space_projection_matrix);
@@ -201,6 +201,7 @@ int main(){
         util::process_input(window,eye_pos,camera_front ,camera_up);
 
         glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
+        glClear(GL_DEPTH_BUFFER_BIT);
         depth_shader.use();
         draw_func(depth_shader);
         glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -213,6 +214,8 @@ int main(){
 //        glDrawArrays(GL_TRIANGLES,0,6);
 //        glEnable(GL_DEPTH_TEST);
 
+        glClearColor(0.0f,0.0f,0.0f,0.0f);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
         glm::mat4 view_matrix = glm::lookAt(eye_pos,eye_pos+camera_front*glm::vec3(3), camera_up);
         shaders.use();
         shaders.set_int("material.diffuse",0);
@@ -231,8 +234,8 @@ int main(){
 //        glDrawArrays(GL_TRIANGLES,0,36);
         glfwSwapBuffers(window);
         glfwPollEvents();
-        glClearColor(0.0f,0.0f,0.0f,0.0f);
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+
+
     }
     
 }
