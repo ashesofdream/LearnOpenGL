@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
 #include <iostream>
+#include <vector>
 
 
 using namespace std;
@@ -19,6 +20,8 @@ using namespace std;
 
 int main(){
     float scr_width = 800,scr_height = 600;
+    float shadow_width,shadow_height;shadow_height=shadow_width=1024;
+
     auto window = util::prepare_window();
     Shader shaders("shaders/vertex.vs.glsl",
     "shaders/fragment.fs.glsl");
@@ -26,7 +29,6 @@ int main(){
     glm::vec3 eye_pos (0.f,0.f,5.f);
     glm::vec3 camera_up {0.f,1.f,0.f};
     glm::vec3 camera_front {0.f,0.f,1.f};
-    glm::vec3 light_pos{1.2f, 1.0f, 2.0f};
     unsigned int GroundVAO , GroundVBO;
     glGenBuffers(1, &GroundVBO);
     glGenVertexArrays(1, &GroundVAO);
@@ -52,25 +54,43 @@ int main(){
     glm::mat4 e_matrix = glm::mat4 (1.f);
 
     //from here is shadow mapping content
-    unsigned int depth_texture;
-    glGenTextures(1, &depth_texture);
-    glBindTexture(GL_TEXTURE_2D, depth_texture);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT,scr_width,scr_height,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+    unsigned int cube_depth_texture;
+    glGenTextures(1, &cube_depth_texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cube_depth_texture);
+    for(int i = 0 ; i < 6 ; ++i ){
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i,0,GL_DEPTH_COMPONENT,shadow_width,shadow_height,0,GL_DEPTH_COMPONENT,GL_FLOAT,nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+
     unsigned int depth_fbo;
     glGenFramebuffers(1, &depth_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, depth_fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,depth_texture,0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,cube_depth_texture,0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
+    
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     //light space
-    auto light_space_projection_matrix = glm::ortho(-10.f,10.f,-10.f,10.f,0.1f,10.f);
+    glm::vec3 light_pos(-2.0f, 4.0f, -1.0f);
+    float far_plane = 100.f;
+    auto light_space_projection_matrix = glm::perspective(glm::radians(90.f), scr_width/scr_height, 0.1f, far_plane);
+    vector<glm::mat4> LightMatrices;
+    {
+        vector<glm::vec3> cam_dir{{1.f,0.f,0.f},{-1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,-1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f}};
+        vector<glm::vec3> cam_top{{0.f,1.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f},{0.f,1.f,0.f},{0.f,1.f,0.f}};
+        for(int i = 0 ; i <6 ;++i) LightMatrices.push_back(glm::lookAt(eye_pos, eye_pos+cam_dir[i], cam_top[i]));
+    }
     auto light_space_view_matrix = glm::lookAt(glm::vec3(-2.0f, 2.0f, -1.0f),glm::vec3 (0.f,0.f,0.f),glm::vec3 (0.f,1.f,0.f));
     Shader depth_shader("shaders/depth_shader.vs.glsl","shaders/depth_shader.fs.glsl");
     depth_shader.use();
     depth_shader.set_mat4("projection",light_space_projection_matrix);
     depth_shader.set_mat4("view",light_space_view_matrix);
+    depth_shader.set_arrays_mat4(6,"shadowMatrices",nullptr,LightMatrices);
+    
 
     //show shader texture;
     Shader direct_shader("shaders/direct_buffer_out.vs.glsl","shaders/direct_buffer_out.fs.glsl");

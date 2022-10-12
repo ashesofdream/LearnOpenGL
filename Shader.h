@@ -12,6 +12,7 @@ class Shader{
     bool set_int(const char* vari_name,const int &i) const;
     bool set_arrays_vec3(int array_len, const char *array_name, const char *attrib_name, const glm::vec3 &v);
     bool set_arrays_float(int array_len, const char *array_name, const char *attrib_name, const float f);
+    bool set_arrays_mat4(int array_len,const char*array_name,const char* attrib_name,const std::vector<glm::mat4>& m);
     unsigned int set_texture(const char *path, const char *sampler_name,unsigned int gl_texture_type=0x0DE1);//default texture type is GL_TEXTURE_2D
 private:
     std::vector<unsigned int> shader_macro;

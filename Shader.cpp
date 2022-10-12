@@ -162,4 +162,17 @@ bool Shader::set_arrays_float(int array_len,const char* array_name,const char* a
     }
     return true;
 }
+bool Shader::set_arrays_mat4(int array_len, const char *array_name, const char *attrib_name, const std::vector<glm::mat4>& m){
+        string tmp_s(array_name);
+    if(attrib_name){
+        for(int i = 0; i < array_len; ++i){
+            set_mat4((tmp_s+'['+ to_string(i)+"]."+attrib_name).c_str(),m[i]);
+        }
+    }else{
+        for(int i = 0; i < array_len; ++i){
+            set_mat4((tmp_s+'['+ to_string(i)+"]").c_str(),m[i]);
+        }   
+    }
+    return true;
+}
 
