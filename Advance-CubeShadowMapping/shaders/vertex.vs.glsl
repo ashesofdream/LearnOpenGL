@@ -9,7 +9,6 @@ out vec2 tex1_coord;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 LightSpaceTrans;
 
 
 void main(){
@@ -20,7 +19,6 @@ void main(){
     anormal[2]/length(vec3(model[2])) ,
     0 )*model));
     tex1_coord = tex_coord;
-    LightSpacePos =LightSpaceTrans*vec4(FragPos,1.f);
 //    Normal = mat3(transpose(inverse(model))) * anormal;
     //     Normal = anormal;
 }

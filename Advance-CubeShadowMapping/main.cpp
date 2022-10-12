@@ -45,7 +45,7 @@ int main(){
     unsigned int ground_text_id = util::texture_from_file("metal.png","../resource/");
     //model
     Model robot_model("../resource/nanosuit.obj");
-    glm::mat4 robot_model_matrix = glm::scale(glm::translate(glm::mat4(1.f),{0.f,-0.4f,0.f}),glm::vec3(0.2) ) ;
+    glm::mat4 robot_model_matrix = glm::scale(glm::translate(glm::mat4(1.f),{0.f,-0.4f,0.f}),glm::vec3(0.2f) ) ;
 
     //mvp
     glm::mat4 projection_matrix = glm::perspective(glm::radians(45.f),scr_width/scr_height,1.f,100.f);
@@ -58,17 +58,18 @@ int main(){
     glGenTextures(1, &cube_depth_texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cube_depth_texture);
     for(int i = 0 ; i < 6 ; ++i ){
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i,0,GL_DEPTH_COMPONENT,shadow_width,shadow_height,0,GL_DEPTH_COMPONENT,GL_FLOAT,nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i,0,GL_DEPTH_COMPONENT,static_cast<int>(shadow_width),static_cast<int>(shadow_height),0,GL_DEPTH_COMPONENT,GL_FLOAT,nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
 
     unsigned int depth_fbo;
     glGenFramebuffers(1, &depth_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, depth_fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,cube_depth_texture,0);
+    glFramebufferTexture(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,cube_depth_texture,0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     
@@ -76,21 +77,21 @@ int main(){
 
     //light space
     glm::vec3 light_pos(-2.0f, 4.0f, -1.0f);
-    float far_plane = 100.f;
+    float far_plane = 25.f;
     auto light_space_projection_matrix = glm::perspective(glm::radians(90.f), scr_width/scr_height, 0.1f, far_plane);
     vector<glm::mat4> LightMatrices;
     {
         vector<glm::vec3> cam_dir{{1.f,0.f,0.f},{-1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,-1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f}};
         vector<glm::vec3> cam_top{{0.f,1.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f},{0.f,1.f,0.f},{0.f,1.f,0.f}};
-        for(int i = 0 ; i <6 ;++i) LightMatrices.push_back(glm::lookAt(eye_pos, eye_pos+cam_dir[i], cam_top[i]));
+        for(int i = 0 ; i <6 ;++i) LightMatrices.push_back(glm::lookAt(light_pos, light_pos+cam_dir[i], cam_top[i]));
     }
-    auto light_space_view_matrix = glm::lookAt(glm::vec3(-2.0f, 2.0f, -1.0f),glm::vec3 (0.f,0.f,0.f),glm::vec3 (0.f,1.f,0.f));
-    Shader depth_shader("shaders/depth_shader.vs.glsl","shaders/depth_shader.fs.glsl");
+    Shader depth_shader("shaders/depth_shader.vs.glsl","shaders/depth_shader.fs.glsl","shaders/depth_shader.gs.glsl");
     depth_shader.use();
     depth_shader.set_mat4("projection",light_space_projection_matrix);
-    depth_shader.set_mat4("view",light_space_view_matrix);
     depth_shader.set_arrays_mat4(6,"shadowMatrices",nullptr,LightMatrices);
-    
+    depth_shader.set_float("far_plane", far_plane);
+    depth_shader.set_vec3("light_pos", light_pos);
+
 
     //show shader texture;
     Shader direct_shader("shaders/direct_buffer_out.vs.glsl","shaders/direct_buffer_out.fs.glsl");
@@ -111,8 +112,9 @@ int main(){
     direct_shader.set_int("samp",0);
     //begin prepare for  render shadow
     shaders.use();
-    shaders.set_mat4("LightSpaceTrans",light_space_projection_matrix*light_space_view_matrix);
-    shaders.set_int("depth_map",1);
+    shaders.set_int("depth_cube",1);
+    shaders.set_vec3("light_pos", light_pos);
+    shaders.set_float("far_plane", far_plane);
 
     auto draw_func = [&](Shader& shader_){
         shader_.set_mat4("model", glm::mat4(1.0f));
@@ -127,7 +129,7 @@ int main(){
     glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
-
+        glViewport(0, 0, (int)shadow_width, (int)shadow_height);
         glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
         glClear(GL_DEPTH_BUFFER_BIT);
         depth_shader.use();
@@ -144,13 +146,14 @@ int main(){
 
         glClearColor(0.0f,0.0f,0.0f,0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+        glViewport(0,0,(int)scr_width,(int)scr_height);
         glm::mat4 view_matrix = glm::lookAt(eye_pos,eye_pos+camera_front*glm::vec3(3), camera_up);
         shaders.use();
         shaders.set_int("material.texture_diffuse1",0);
         shaders.set_mat4("model",e_matrix);
         shaders.set_mat4("view",view_matrix);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,depth_texture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,cube_depth_texture);
         glActiveTexture(GL_TEXTURE0);
 //        glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
 //        depth_shader.use();

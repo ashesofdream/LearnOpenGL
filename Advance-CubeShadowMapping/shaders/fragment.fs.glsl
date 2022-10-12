@@ -43,15 +43,14 @@ struct point_light{
     float linear;
     float quadratic;
 };
-uniform spot_light spotLight;
-uniform vec3 light_color;
 uniform vec3 view_pos;
+//
 uniform Material material;
-#define NR_POINT_LIGHTS 4
-uniform point_light pointLights[NR_POINT_LIGHTS];
+uniform samplerCube depth_cube;
+uniform vec3 light_pos;
+uniform float far_plane;
 
 in vec3 FragPos;
-in vec4 LightSpacePos;
 in vec3 Normal;
 in vec2 tex1_coord;
 
@@ -59,23 +58,16 @@ out vec4 FragColor;
 vec3 CalcSpotLight(spot_light light );
 vec3 CalcDirLight(dir_light light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(point_light light);
-uniform sampler2D depth_map;
 void main(){
-    //vec3 result = CalcSpotLight(spotLight);
-//    for(int i = 0 ; i < NR_POINT_LIGHTS ; i++){
-//        result += CalcPointLight(pointLights[i]);
-//    }
-    vec3 LightCoords = LightSpacePos.xyz/LightSpacePos.w * 0.5+0.5;
-    float depth_value = texture(depth_map,LightCoords.xy).r;
-    //FragColor = vec4(vec3(depth_value),1.0);
-
+    float light_depth_value = texture(depth_cube,FragPos-light_pos).r * far_plane;
+    float cur_depth_value = length(FragPos-light_pos);
     vec4 texColor = texture(material.texture_diffuse1,tex1_coord);
 //    if(texColor.a < 0.1) discard;
     FragColor = texColor;
-   if(depth_value <= LightCoords.z - 0.05) FragColor = texColor * 0.2;
-    //pcss
-
-
+    // FragColor = vec4(vec3(light_pos),1.f);
+    FragColor = texture(depth_cube,FragPos-light_pos);
+//    if(light_depth_value <= cur_depth_value - 0.05) FragColor = texColor * 0.2;
+    
 }
 vec3 CalcSpotLight(spot_light light ){
     //return light.position;
