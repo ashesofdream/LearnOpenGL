@@ -48,7 +48,7 @@ int main(){
     glm::mat4 robot_model_matrix = glm::scale(glm::translate(glm::mat4(1.f),{0.f,-0.4f,0.f}),glm::vec3(0.2f) ) ;
 
     //mvp
-    glm::mat4 projection_matrix = glm::perspective(glm::radians(45.f),scr_width/scr_height,1.f,100.f);
+    glm::mat4 projection_matrix = glm::perspective(glm::radians(90.f),scr_width/scr_height,0.1f,25.f);
     //glm::mat4 projection_matrix = glm::ortho(-1.f,1.f,-1.f,1.f,0.1f,100.f);
     shaders.set_mat4("projection",projection_matrix);
     glm::mat4 e_matrix = glm::mat4 (1.f);
@@ -72,22 +72,24 @@ int main(){
     glFramebufferTexture(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,cube_depth_texture,0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "Framebuffer not complete!" << std::endl;
     
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     //light space
     glm::vec3 light_pos(-2.0f, 4.0f, -1.0f);
     float far_plane = 25.f;
-    auto light_space_projection_matrix = glm::perspective(glm::radians(90.f), scr_width/scr_height, 0.1f, far_plane);
+    auto light_space_projection_matrix = glm::perspective(glm::radians(90.f), shadow_width/shadow_height, 1.f, far_plane);
     vector<glm::mat4> LightMatrices;
     {
         vector<glm::vec3> cam_dir{{1.f,0.f,0.f},{-1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,-1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f}};
-        vector<glm::vec3> cam_top{{0.f,1.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f},{0.f,1.f,0.f},{0.f,1.f,0.f}};
-        for(int i = 0 ; i <6 ;++i) LightMatrices.push_back(glm::lookAt(light_pos, light_pos+cam_dir[i], cam_top[i]));
+        vector<glm::vec3> cam_top{{0.f,-1.f,0.f},{0.f,-1.f,0.f},{0.f,0.f,1.f},{0.f,0.f,-1.f},{0.f,-1.f,0.f},{0.f,-1.f,0.f}};
+        for(int i = 0 ; i <6 ;++i) 
+        LightMatrices.push_back(light_space_projection_matrix*glm::lookAt(light_pos, light_pos+cam_dir[i], cam_top[i]));
     }
     Shader depth_shader("shaders/depth_shader.vs.glsl","shaders/depth_shader.fs.glsl","shaders/depth_shader.gs.glsl");
     depth_shader.use();
-    depth_shader.set_mat4("projection",light_space_projection_matrix);
     depth_shader.set_arrays_mat4(6,"shadowMatrices",nullptr,LightMatrices);
     depth_shader.set_float("far_plane", far_plane);
     depth_shader.set_vec3("light_pos", light_pos);
@@ -112,11 +114,12 @@ int main(){
     direct_shader.set_int("samp",0);
     //begin prepare for  render shadow
     shaders.use();
-    shaders.set_int("depth_cube",1);
+    shaders.set_int("depth_cube",5);
     shaders.set_vec3("light_pos", light_pos);
     shaders.set_float("far_plane", far_plane);
 
     auto draw_func = [&](Shader& shader_){
+        shader_.use();
         shader_.set_mat4("model", glm::mat4(1.0f));
         glBindVertexArray(GroundVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -126,6 +129,17 @@ int main(){
         robot_model.Draw(shader_);
     };
     util::init_mouse(window,camera_front);
+    
+    //create a light shader
+    Shader light_shader("shaders/vertex.vs.glsl","shaders/light_source.fs.glsl");
+    auto&& [light_cube_vbo,light_cube_vao] = util::GenVBOVAOAndBind();
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices),cube_vertices,GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5* sizeof(float ),nullptr);
+    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,5* sizeof(float),reinterpret_cast<void *>(2* sizeof(float)));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    light_shader.set_mat4("model",glm::scale(glm::translate(e_matrix,light_pos),glm::vec3(0.2f)));
+
     glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
         util::process_input(window,eye_pos,camera_front ,camera_up);
@@ -152,17 +166,20 @@ int main(){
         shaders.set_int("material.texture_diffuse1",0);
         shaders.set_mat4("model",e_matrix);
         shaders.set_mat4("view",view_matrix);
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_CUBE_MAP,cube_depth_texture);
         glActiveTexture(GL_TEXTURE0);
 //        glBindFramebuffer(GL_FRAMEBUFFER,depth_fbo);
 //        depth_shader.use();
 //        draw_func(depth_shader);
         draw_func(shaders);
-//        light_source_shader.use();
-//        light_source_shader.set_mat4("view",view_matrix);
-//        glBindVertexArray(light_VAO);
-//        glDrawArrays(GL_TRIANGLES,0,36);
+
+        light_shader.use();
+        glBindVertexArray(light_cube_vao);
+        light_shader.set_mat4("view",view_matrix);
+        light_shader.set_mat4("projection",projection_matrix);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
 

@@ -65,9 +65,8 @@ void main(){
 //    if(texColor.a < 0.1) discard;
     FragColor = texColor;
     // FragColor = vec4(vec3(light_pos),1.f);
-    FragColor = texture(depth_cube,FragPos-light_pos);
-//    if(light_depth_value <= cur_depth_value - 0.05) FragColor = texColor * 0.2;
-    
+    // FragColor = texture(depth_cube,FragPos-light_pos);
+   if(light_depth_value <= cur_depth_value - 0.05) FragColor = texColor * 0.2;
 }
 vec3 CalcSpotLight(spot_light light ){
     //return light.position;
