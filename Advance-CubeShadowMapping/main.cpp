@@ -36,10 +36,12 @@ int main(){
     glBindVertexArray(GroundVAO);
     glBindBuffer(GL_ARRAY_BUFFER,GroundVBO);
 
-    glBufferData(GL_ARRAY_BUFFER,sizeof(planeVertices),&planeVertices,GL_STATIC_DRAW);
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5*sizeof(float), nullptr);
-    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(sizeof(float)*3));
+    glBufferData(GL_ARRAY_BUFFER,sizeof(planeVerticesWithNormal),&planeVerticesWithNormal,GL_STATIC_DRAW);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float), nullptr);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(sizeof(float)*3));
+    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(sizeof(float)*3));
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
     
     unsigned int ground_text_id = util::texture_from_file("metal.png","../resource/");
@@ -48,7 +50,7 @@ int main(){
     glm::mat4 robot_model_matrix = glm::scale(glm::translate(glm::mat4(1.f),{0.f,-0.4f,0.f}),glm::vec3(0.2f) ) ;
 
     //mvp
-    glm::mat4 projection_matrix = glm::perspective(glm::radians(90.f),scr_width/scr_height,0.1f,25.f);
+    glm::mat4 projection_matrix = glm::perspective(glm::radians(45.f),scr_width/scr_height,0.1f,25.f);
     //glm::mat4 projection_matrix = glm::ortho(-1.f,1.f,-1.f,1.f,0.1f,100.f);
     shaders.set_mat4("projection",projection_matrix);
     glm::mat4 e_matrix = glm::mat4 (1.f);
@@ -117,10 +119,16 @@ int main(){
     shaders.set_int("depth_cube",5);
     shaders.set_vec3("light_pos", light_pos);
     shaders.set_float("far_plane", far_plane);
+    shaders.set_vec3("light.ambient",glm::vec3(0.3f));
+    shaders.set_vec3("light.diffuse", glm::vec3(1.f));
+    shaders.set_vec3("light.specular", glm::vec3(0.5f));
+    shaders.set_vec3("light.position",light_pos);
+    
 
     auto draw_func = [&](Shader& shader_){
         shader_.use();
         shader_.set_mat4("model", glm::mat4(1.0f));
+        shader_.set_int("material.texture_diffuse1", 0);
         glBindVertexArray(GroundVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,ground_text_id);
@@ -166,6 +174,7 @@ int main(){
         shaders.set_int("material.texture_diffuse1",0);
         shaders.set_mat4("model",e_matrix);
         shaders.set_mat4("view",view_matrix);
+        shaders.set_vec3("view_pos", eye_pos);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_CUBE_MAP,cube_depth_texture);
         glActiveTexture(GL_TEXTURE0);
