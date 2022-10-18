@@ -1,0 +1,2 @@
+# Parallax Mapping
+1. Can't implement parallax mapping in vertex shader. Because vertex shader just revise each vertex's texcoord.This will cause the whole triangle's texcoord have same change and we can only see some offset of the texture.What we need to do is change every pixel's texcoord.

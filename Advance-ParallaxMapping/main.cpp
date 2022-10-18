@@ -12,7 +12,7 @@ void RenderQuad();
 int main(){
     
     int scr_w = 800,scr_h = 600;
-    glm::vec3 light_pos{0.f,2.f,-2.f};
+    glm::vec3 light_pos(0.5f, 1.0f, 0.3f);;
     glm::vec3 camera_front{0.f,0.f,-1.f};
     glm::vec3 camera_up{0.f,1.f,0.f};
     glm::vec3 view_pos{0.f,0.f,1.f};
@@ -21,8 +21,10 @@ int main(){
     const auto& window = util::prepare_window();
     
     auto&& [brick_vao,vbo] = util::GenVBOVAOAndBind();
-    auto wall_text =util::texture_from_file("brickwall.jpg", "../resource/");
-    auto wall_normal_text = util::texture_from_file("brickwall_normal.jpg", "../resource/");
+    auto wall_text =util::texture_from_file("bricks2.jpg", "../resource/");
+    auto wall_normal_text = util::texture_from_file("bricks2_normal.jpg", "../resource/");
+    auto wall_disp_text = util::texture_from_file("bricks2_disp.jpg", "../resource/");
+    
 
     Shader s("shaders/brick.vs.glsl","shaders/brick.fs.glsl");
     s.use();
@@ -32,6 +34,7 @@ int main(){
     s.set_int("normal_map", 1);
     s.set_int("texture_map", 0);
     s.set_int("parallax_map",2);
+    s.set_float("height_scale", 0.2f);
 
     util::init_mouse(window, camera_front);
     while (!glfwWindowShouldClose(window)) {
@@ -47,6 +50,8 @@ int main(){
         glBindTexture(GL_TEXTURE_2D,wall_text);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D,wall_normal_text);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D,wall_disp_text);
         RenderQuad();
         
         glfwSwapBuffers(window);
