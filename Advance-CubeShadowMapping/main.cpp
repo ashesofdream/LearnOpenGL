@@ -124,7 +124,6 @@ int main(){
     shaders.set_vec3("light.specular", glm::vec3(0.5f));
     shaders.set_vec3("light.position",light_pos);
     
-
     auto draw_func = [&](Shader& shader_){
         shader_.use();
         shader_.set_mat4("model", glm::mat4(1.0f));
