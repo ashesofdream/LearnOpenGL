@@ -11,11 +11,11 @@ void main(){
     vec2 tex_offset = 1.f/textureSize(samp,0);
     for(int i =  1 ; i <  5 ; ++i ){
         if(horizontal){
-            ret += texture(samp,TexCoords+tex_offset.y*i)*weight[i];
-            ret += texture(samp,TexCoords-tex_offset.y*i)*weight[i];
+            ret += texture(samp,TexCoords+vec2(tex_offset.x*i,0.f))*weight[i];
+            ret += texture(samp,TexCoords-vec2(tex_offset.x*i,0.f))*weight[i];
         }else{
-            ret += texture(samp,TexCoords+tex_offset.x*i)*weight[i];
-            ret += texture(samp,TexCoords-tex_offset.x*i)*weight[i];
+            ret += texture(samp,TexCoords+vec2(0.f,tex_offset.y*i))*weight[i];
+            ret += texture(samp,TexCoords-vec2(0.f,tex_offset.y*i))*weight[i];
         }
     }
     FragColor = vec4(ret.rgb,1.f);

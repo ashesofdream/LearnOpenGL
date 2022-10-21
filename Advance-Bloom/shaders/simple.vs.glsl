@@ -13,7 +13,7 @@ out vec3 Normal;
 void main(){
     FragCoord = vec3(model*vec4(apoint,1.f));
     gl_Position = projection*view*model*vec4(apoint,1.f);
-    FragCoord = vec3(apoint);
-    Normal = vec3(normal_matrix * vec4(anormal,1.f));
+    Normal = normalize(vec3(normal_matrix * vec4(anormal,1.f)));
+    TexCoords = atexcoord;
     //gl_Position = vec4(apoint,1.f);
 }

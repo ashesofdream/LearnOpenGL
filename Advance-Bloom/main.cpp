@@ -40,7 +40,11 @@ int main(){
             GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0+i,GL_TEXTURE_2D,couple_texts[i],0
         );
     }
-
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scr_width, scr_height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 
     //this part prepare for gaussian
     GLuint gaussian_texts[2],gaussian_frame_buffs[2];
@@ -59,13 +63,11 @@ int main(){
         glFramebufferTexture2D(
             GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,gaussian_texts[i],0
         );
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "Framebuffer not complete!" << std::endl;
     }
-    // unsigned int rboDepth;
-    // glGenRenderbuffers(1, &rboDepth);
-    // glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scr_width, scr_height);
-    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    // if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //prepare cube
@@ -77,7 +79,8 @@ int main(){
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(float)*8,0);
     glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,sizeof(float)*8,reinterpret_cast<void*>(sizeof(float)*6));
     glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,sizeof(float)*8,reinterpret_cast<void*>(sizeof(float)*3));
-    
+    auto cube_text = util::texture_from_file("container2.png", "../resource/");
+    //prepare light
     std::vector<glm::vec3> lightPositions;
     lightPositions.push_back(glm::vec3( 0.0f, 0.5f,  1.5f));
     lightPositions.push_back(glm::vec3(-4.0f, 0.5f, -3.0f));
@@ -90,26 +93,87 @@ int main(){
     lightColors.push_back(glm::vec3(0.0f,   0.0f,  15.0f));
     lightColors.push_back(glm::vec3(0.0f,   5.0f,  0.0f));
 
+
     Camera camera(window);
     split_shader.use();
     split_shader.set_mat4("projection", camera.perspective_matrix());
+    for (unsigned int i = 0; i < lightPositions.size(); i++)
+    {
+        split_shader.set_vec3(("lights[" + std::to_string(i) + "].Position").c_str(), lightPositions[i]);
+        split_shader.set_vec3(("lights[" + std::to_string(i) + "].Color").c_str(), lightColors[i]);
+    }
     light_source_shader.use();
     light_source_shader.set_mat4("projection", camera.perspective_matrix());
     auto draw_scene = [&](Shader& s)->void{
         s.use();
         glBindFramebuffer(GL_FRAMEBUFFER,couple_frame_buff);
-        glClearColor(0.f,0.f,0.f,0.0f);
-        glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
         glBindVertexArray(cube_vao);
         s.set_mat4("view", camera.view_matrix());
         s.set_int("samp", 0);
         glActiveTexture(GL_TEXTURE0);
-        //draw light_source     
+        glBindTexture(GL_TEXTURE_2D,cube_text);
+        /*****************************************************************
+            this part copy from learnopengl direct
+        ******************************************************************/
+        glm::mat4 model;     
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        s.set_mat4("model", model);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model)));
+        glDrawArrays(GL_TRIANGLES,0,36);;
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        s.set_mat4("model", model);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model)));
+        glDrawArrays(GL_TRIANGLES,0,36);;
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, -1.0f, 2.0));
+        model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        s.set_mat4("model", model);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model)));
+        glDrawArrays(GL_TRIANGLES,0,36);;
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 2.7f, 4.0));
+        model = glm::rotate(model, glm::radians(23.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        model = glm::scale(model, glm::vec3(1.25));
+        s.set_mat4("model", model);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model)));
+        glDrawArrays(GL_TRIANGLES,0,36);;
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -3.0));
+        model = glm::rotate(model, glm::radians(124.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        s.set_mat4("model", model);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model)));
+        glDrawArrays(GL_TRIANGLES,0,36);;
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0));
+        model = glm::scale(model, glm::vec3(0.5f));
+        s.set_mat4("model", model);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model)));
+        glDrawArrays(GL_TRIANGLES,0,36);;
+        /*****************************************************************
+            copy end
+        ******************************************************************/
+    };
+    auto draw_light_source = [&](Shader& s)->void{
+        s.use();
+        glBindFramebuffer(GL_FRAMEBUFFER,couple_frame_buff);
+        glBindVertexArray(cube_vao);
+        s.set_mat4("view", camera.view_matrix());
+        s.set_int("samp", 0);
+        //draw light_source
         
         for(int i = 0 ; i < lightPositions.size();++i){
             glm::mat4 model_matrix = glm::translate(e_matrix,lightPositions[i]);
+            model_matrix = glm::scale(model_matrix, glm::vec3(0.25f));
             s.set_mat4("model", model_matrix);
-            s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model_matrix)));
             s.set_vec3("light_color", lightColors[i]);
             
             glDrawArrays(GL_TRIANGLES,0,36);
@@ -123,6 +187,7 @@ int main(){
         s.set_int("samp", 0);
         for(GLuint cur_num = 0 ; cur_num < draw_num ; ++cur_num){
             glBindFramebuffer(GL_FRAMEBUFFER,gaussian_frame_buffs[horizontal]);
+            //glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
             glBindTexture(GL_TEXTURE_2D, cur_num == 0 ? couple_texts[1]:gaussian_texts[!horizontal]);
             s.set_int("horizontal", horizontal);
             util::draw_quad();
@@ -131,7 +196,6 @@ int main(){
     };
     auto blend_draw = [&](Shader& s)->void{
         s.use();
-
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, couple_texts[0]);
@@ -140,16 +204,22 @@ int main(){
         
         util::draw_quad();
     };
-    int i = 0;
+    
     while(!glfwWindowShouldClose(window)){
         camera.update();
-        glEnable(GL_DEPTH_TEST);
         //split_shader.use();
-        draw_scene(light_source_shader);
+        glEnable(GL_DEPTH_TEST);
+        draw_scene(split_shader);
+        draw_light_source(light_source_shader);
         glDisable(GL_DEPTH_TEST);
         gaussian_draw(gaussian_shader);  
         blend_draw(blend_shader);
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
+        glClearColor(0.f,0.f,0.f,1.f);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glBindFramebuffer(GL_FRAMEBUFFER,couple_frame_buff);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     }
 }

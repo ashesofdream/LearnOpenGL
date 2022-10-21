@@ -17,5 +17,5 @@ void main(){
     //gamma correct 
     hdr_color = pow(hdr_color,vec3(1.f/gamma));
     FragColor = vec4(hdr_color,1.f);
-    FragColor = gaussian_color;
+    // FragColor = origin_color;
 }

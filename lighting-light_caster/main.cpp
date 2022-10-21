@@ -19,8 +19,8 @@ using namespace std;
 
 int main(){
     auto window = util::prepare_window();
-    Shader s("D://Code/graphic/LearnOpenGL/lighting-light_caster/vertex.vs.glsl",
-    "D://Code/graphic/LearnOpenGL/lighting-light_caster/fragment.fs.glsl");
+    Shader s("shaders/vertex.vs.glsl",
+    "shaders/fragment.fs.glsl");
     
 
     unsigned int VAO,VBO;
@@ -70,7 +70,7 @@ int main(){
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
     int text1_width,text1_height,channels_num;
-    unsigned char* text1_data = stbi_load("D://Code/graphic/LearnOpenGL/lighting-light_caster/container2.png",&text1_width,&text1_height,&channels_num,0);
+    unsigned char* text1_data = stbi_load("../resource/container2.png",&text1_width,&text1_height,&channels_num,0);
     if(text1_data == nullptr){
         std::cout<<"load image fail"<<endl;
         return 0;
@@ -85,7 +85,7 @@ int main(){
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D,specular_text);
     int  specular_text_width,specular_text_height,specular_text_channel;
-    auto specular_data =  stbi_load("D://Code/graphic/LearnOpenGL/lighting-light_caster/container2_specular.png",&specular_text_width,&specular_text_height,&specular_text_channel,0);
+    auto specular_data =  stbi_load("../resource/container2_specular.png",&specular_text_width,&specular_text_height,&specular_text_channel,0);
     if(specular_data == nullptr){
         cout<<"load specular texture failed"<<endl;
         return 0;
@@ -109,8 +109,8 @@ int main(){
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(sizeof(float)*3));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    Shader light_source_shader("D://Code/graphic/LearnOpenGL/lighting-light_caster/vertex.vs.glsl",
-    "D://Code/graphic/LearnOpenGL/lighting-light_caster/light_source.fs.glsl");
+    Shader light_source_shader("shaders/vertex.vs.glsl",
+    "shaders/light_source.fs.glsl");
     light_source_shader.use();
     light_source_shader.set_mat4("projection",projection_matrix);
     light_source_shader.set_mat4("model", glm::scale(glm::translate(glm::mat4 (1.0f), light_pos),glm::vec3(0.2f)) );

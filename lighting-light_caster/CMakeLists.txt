@@ -1,6 +1,10 @@
 project(lighting-light_caster)
 find_path(STB_INCLUDE_DIRS "stb_image.h")
-
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/resource ${CMAKE_BINARY_DIR}/resource SYMBOLIC)
+file(CREATE_LINK ${CMAKE_SOURCE_DIR}/util ${CMAKE_BINARY_DIR}/util SYMBOLIC)
+file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/shaders ${CMAKE_CURRENT_BINARY_DIR}/shaders SYMBOLIC)
 add_executable(lighting-light_caster main.cpp ../util.cpp ../Shader.cpp)
+set_property(TARGET lighting-light_caster  PROPERTY CXX_STANDARD 17)
+
 target_link_libraries(lighting-light_caster glfw glad::glad)
 target_include_directories(lighting-light_caster PRIVATE ${STB_INCLUDE_DIRS})
