@@ -43,7 +43,7 @@ Shader::Shader(const char* vertex_shader_path,const char* fragment_shader_path,c
     std::string fragment_source((std::istreambuf_iterator<char>(fragment_source_stream)),std::istreambuf_iterator<char>());
     auto p_fragment_source = fragment_source.c_str();
 //    std::cout<<"frag:"<<p_fragment_source<<std::endl;
-    //std::cout<<"vertex"<<p_vertex_source<<std::endl;
+//     std::cout<<"vertex:"<<p_vertex_source<<std::endl;
     unsigned int vertex_shader,fragment_shader,geometry_shader;
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);;

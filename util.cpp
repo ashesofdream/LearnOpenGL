@@ -166,3 +166,25 @@ unsigned int util::loadCubemap(std::vector<std::string> faces){
     return textureID;
 }
 
+void util::draw_quad(){
+    static GLuint simple_quad_vao=0;
+    GLuint target_vao = simple_quad_vao ;
+    if(target_vao==0){
+        float quad_data[] =  {-1.f,1.f,0.f,1.f,
+                                  1.f, 1.f,1.f,1.f,
+                                   -1.f,-1.f,0.f,0.f,
+
+                                   -1.f,-1.f,0.f,0.f,
+                                   1.f,-1.f,1.f,0.f,
+                                   1.f,1.f,1.f,1.f};
+        auto&& [tmp_vbo,tmp_vao] = GenVBOVAOAndBind();
+        glBufferData(GL_ARRAY_BUFFER,sizeof(quad_data),quad_data,GL_STATIC_DRAW);
+        glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,sizeof(float)*4,nullptr);
+        glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,sizeof(float)*4,reinterpret_cast<void*>(sizeof(float)*2));
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        simple_quad_vao = target_vao = tmp_vao;
+    }
+    glBindVertexArray(target_vao);
+    glDrawArrays(GL_TRIANGLES,0,6);
+}
