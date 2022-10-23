@@ -20,16 +20,17 @@ uniform sampler2D frag_pos_samp;
 
 out vec4 out_color;
 void main(){
-    // const float ambient = 0.f;
-    // vec3 ret_color;
-    // vec3 origin_color = texture(color_samp,tex_coord).rgb;
-    // for(int i = 0 ; i < NR_LIGHTS ; ++i ){
-    //     vec3 light_dir = lights[i].Position - texture(frag_pos_samp,tex_coord).rgb;
-    //     vec3 n_light_dir = normalize(light_dir);
-    //     float light_coefficient = dot( texture(normal_samp,tex_coord).rgb, n_light_dir);
-    //     float light_dis = length(light_dir);
-    //     ret_color += light_coefficient * lights[i].Color * origin_color /(light_dis*light_dis);
-    // }
-    // out_color = vec4(ret_color,1.f);
-    out_color = vec4(1.f,1.f,0.f,1.f);
+    
+    const float ambient = 0.f;
+    vec3 ret_color = vec3(0.f,0.f,0.f);
+    vec3 origin_color = texture(color_samp,tex_coord).rgb;
+    for(int i = 0 ; i < NR_LIGHTS ; ++i ){
+        vec3 light_dir = lights[i].Position - texture(frag_pos_samp,tex_coord).rgb;
+        vec3 n_light_dir = normalize(light_dir);
+        float light_coefficient = dot( texture(normal_samp,tex_coord).rgb, n_light_dir);
+        float light_dis = length(light_dir);
+        ret_color += light_coefficient * lights[i].Color * origin_color /(light_dis*light_dis);
+    }
+    out_color = vec4(ret_color,1.f);
+    //out_color = texture(color_samp,tex_coord);
 }

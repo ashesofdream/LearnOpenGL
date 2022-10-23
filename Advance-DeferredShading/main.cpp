@@ -46,25 +46,29 @@ int main() {
 
   glGenTextures(1, &g_color_spec);
   glBindTexture(GL_TEXTURE_2D, g_color_spec);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, SCRWIDTH, SCRHEIGHT, 0, GL_RGBA,
-               GL_FLOAT, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCRWIDTH, SCRHEIGHT, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, nullptr);
   util::set_texture_prop(GL_NEAREST);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D,
                          g_color_spec, 0);
-
-  glGenRenderbuffers(1, &g_depth);
-  glBindRenderbuffer(GL_RENDERBUFFER, g_depth);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH, SCRWIDTH, SCRHEIGHT);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER, g_depth);
-
   GLuint attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
                            GL_COLOR_ATTACHMENT2};
   glDrawBuffers(3, attachments);
+
+  glGenRenderbuffers(1, &g_depth);
+  glBindRenderbuffer(GL_RENDERBUFFER, g_depth);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCRWIDTH, SCRHEIGHT);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                            GL_RENDERBUFFER, g_depth);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "Framebuffer not complete!" << std::endl;
+
+
   
   Camera camera(window);
   g_shader.use();
   g_shader.set_mat4("projection", camera.perspective_matrix());
+  
   // model
   Model m("../resource/nanosuit.obj");
   std::vector<glm::vec3> objectPositions;
@@ -95,6 +99,7 @@ int main() {
     lightColors.push_back(glm::vec3(rColor, gColor, bColor));
   };
   //set light for object
+  direct_shader.use();
   for (GLuint i = 0; i < lightPositions.size(); i++)
   {
     glUniform3fv(glGetUniformLocation(direct_shader.program_id, ("lights[" + std::to_string(i) + "].Position").c_str()), 1, &lightPositions[i][0]);
@@ -107,11 +112,10 @@ int main() {
     glUniform1f(glGetUniformLocation(direct_shader.program_id, ("lights[" + std::to_string(i) + "].Quadratic").c_str()), quadratic);
   }
   //set shader
-  direct_shader.use();
   direct_shader.set_vec3("view_pos", camera.pos());
-  direct_shader.set_int("color_samp", 0);
+  direct_shader.set_int("frag_pos_samp", 0);
   direct_shader.set_int("normal_samp", 1);
-  direct_shader.set_int("frag_pos_samp", 2);
+  direct_shader.set_int("color_samp", 2);
   
 
   glClearColor(0.f,0.f,0.f,0.f);
@@ -122,25 +126,26 @@ int main() {
     auto view_matrix = camera.view_matrix();
     for(int i = 0 ; i < objectPositions.size(); ++i){
         auto model_matrix =  glm::translate(e_matrix, objectPositions[i]); 
-        model_matrix = glm::translate(model_matrix, vec3(0.25));
+        model_matrix = glm::scale(model_matrix, vec3(0.25));
         s.set_mat4("model", model_matrix);
         s.set_mat4("view", view_matrix);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model_matrix)));
         m.Draw(s);
     }
   };
   glEnable(GL_DEPTH_TEST);
   while (!glfwWindowShouldClose(window)) {
     camera.update();
-    //draw_scene(g_shader);
+    draw_scene(g_shader);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     direct_shader.use();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,g_color_spec);
+    glBindTexture(GL_TEXTURE_2D,g_postion);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D,g_normal);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D,g_postion);
+    glBindTexture(GL_TEXTURE_2D,g_color_spec);
     util::draw_quad();
 
     glfwSwapBuffers(window);

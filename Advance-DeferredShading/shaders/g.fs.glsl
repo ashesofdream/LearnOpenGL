@@ -14,5 +14,6 @@ void main(){
     g_frag_pos = frag_pos;
     g_normal = normal;
     g_color.rgb = texture(texture_diffuse1,tex_coord).rgb;
+    // g_color.rgb = vec3(1.f,0.f,0.f);
     g_color.a = texture(texture_specular1,tex_coord).r;
 }

@@ -1,6 +1,6 @@
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
 #include <functional>
+struct GLFWwindow;
 class Camera{
 private:
     glm::vec3 front_;
