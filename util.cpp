@@ -188,3 +188,15 @@ void util::draw_quad(){
     glBindVertexArray(target_vao);
     glDrawArrays(GL_TRIANGLES,0,6);
 }
+
+void util::set_texture_prop(GLint scale,GLint wrap,bool is_3d){
+    if(scale!=NULL){
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,scale);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,scale);
+    }
+    if(wrap!=NULL){
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_R,wrap);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,wrap);
+        if(is_3d) glTextureParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,wrap);
+    }
+}
