@@ -200,3 +200,4 @@ void util::set_texture_prop(GLint scale,GLint wrap,bool is_3d){
         if(is_3d) glTextureParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,wrap);
     }
 }
+

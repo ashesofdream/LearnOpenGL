@@ -21,6 +21,7 @@ int main() {
   Shader g_shader("shaders/g.vs.glsl", "shaders/g.fs.glsl");
   Shader direct_shader("../util/shaders/quad.vs.glsl",
                        "shaders/deferred.fs.glsl");
+  Shader forward_shader("shaders/g.vs.glsl","shaders/forward_light.fs.glsl");
 
   GLuint g_buffer;
   glGenFramebuffers(1, &g_buffer);
@@ -68,7 +69,17 @@ int main() {
   Camera camera(window);
   g_shader.use();
   g_shader.set_mat4("projection", camera.perspective_matrix());
-  
+  forward_shader.use();
+  forward_shader.set_mat4("projection",camera.perspective_matrix());
+
+  //light cube
+  auto&& [cube_vbo,cube_vao] = util::GenVBOVAOAndBind();
+  glBufferData(GL_ARRAY_BUFFER,sizeof(cube_vertices_with_normal_and_text_coords),cube_vertices_with_normal_and_text_coords,GL_STATIC_DRAW);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(GL_FLOAT)*8,nullptr);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(GL_FLOAT)*8,reinterpret_cast<void*>(sizeof(GL_FLOAT)*3));
+  glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,sizeof(GL_FLOAT)*8,reinterpret_cast<void*>(sizeof(GL_FLOAT)*6));
+  glEnableVertexAttribArray(0);glEnableVertexAttribArray(1);glEnableVertexAttribArray(2);
+
   // model
   Model m("../resource/nanosuit.obj");
   std::vector<glm::vec3> objectPositions;
@@ -131,6 +142,27 @@ int main() {
         s.set_mat4("view", view_matrix);
         s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model_matrix)));
         m.Draw(s);
+
+    }
+  };
+
+  auto front_draw =  [&](Shader& s){
+    s.use();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER,0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER,g_buffer);
+    glBlitFramebuffer(0,0,SCRWIDTH,SCRHEIGHT,0,0,SCRWIDTH,SCRHEIGHT,GL_DEPTH_BUFFER_BIT,GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+    auto view_matrix = camera.view_matrix();
+    for(int i = 0 ; i < lightPositions.size(); ++i){
+        auto model_matrix =  glm::translate(e_matrix, lightPositions[i]); 
+        model_matrix = glm::scale(model_matrix, vec3(0.25));
+        s.set_mat4("model", model_matrix);
+        s.set_mat4("view", view_matrix);
+        s.set_mat4("normal_matrix", glm::transpose(glm::inverse(model_matrix)));
+        s.set_vec3("light_color",lightColors[i]);
+        glBindVertexArray(cube_vao);
+        glDrawArrays(GL_TRIANGLES,0,36);
     }
   };
   glEnable(GL_DEPTH_TEST);
@@ -147,6 +179,8 @@ int main() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D,g_color_spec);
     util::draw_quad();
+
+    front_draw(forward_shader);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
